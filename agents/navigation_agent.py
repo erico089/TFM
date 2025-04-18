@@ -2,12 +2,13 @@ from smolagents import CodeAgent, OpenAIServerModel, tool
 from dotenv import load_dotenv
 import os
 import requests
+import re
 
 load_dotenv()
 api_key = os.environ["OPENROUTER_API_KEY"]
 
 model = OpenAIServerModel(
-    model_id="openrouter/optimus-alpha",
+    model_id="deepseek/deepseek-chat-v3-0324:free",
     api_key=api_key,
     api_base="https://openrouter.ai/api/v1"
 )
@@ -24,7 +25,17 @@ def get_html_from_url(url: str) -> str:
         str: El contenido HTML de la página.
     """
     response = requests.get(url)
-    return response.text
+    html = response.text
+
+    # Reemplaza todos los <path ...>...</path> por <path data-simplified="true"/>
+    simplified_html = re.sub(
+        r'<path[^>]*?d="[^"]+"[^>]*/?>',
+        '<path data-simplified="true"/>',
+        html,
+        flags=re.IGNORECASE
+    )
+
+    return simplified_html
 
 
 agent = CodeAgent(
