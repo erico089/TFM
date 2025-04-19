@@ -1,9 +1,11 @@
 import asyncio
-from typing import List
 import httpx
 import uuid
 import os
 from agents.crawler_agent import crawl_convocatoria
+from agents.refinement_agent import run_refinement_agent
+from tools.vectorial_db_tools import process_temp_pdfs_batch, process_pdfs_to_shared_db
+from postgres_manager import insert_into_ayudas_batch
 
 class CrawlingManager:
     def __init__(self, nav_agent_url, crawl_agent_url, refine_agent_url, db_manager_url):
@@ -27,36 +29,21 @@ class CrawlingManager:
             result = crawl_convocatoria(url, str(uuid.uuid4()))
             crawled_results.append(result)
 
-        
-        # Paso 3: Refinamiento concurrente
-        refine_tasks = []
-        for result in crawled_results:
-            if result.get("status") == "ok":
-                json_data = result["data"]
-                pdf_path = result["pdf_path"]
-                refine_tasks.append(
-                    self.call_agent(self.refine_agent_url, {"json_data": json_data, "pdf_path": pdf_path})
-                )
+        # Refinamiento temporal de los PDFs
+        process_temp_pdfs_batch()
 
-        refined_results = await asyncio.gather(*refine_tasks)
+        # Paso 3: Refinamiento concurrente
+        refined_results = []
+        for result in crawled_results:
+            json_name = os.path.splitext(os.path.basename(result))[0]
+            vector_db_path = f"data/temp_vec_db/{json_name}"
+            refined_json_path=  f"data/json/refined/{json_name}.json"
+            run_refinement_agent(result, vector_db_path)
+            refined_results.append(refined_json_path)
 
         # Paso 4: Guardado en DB
-        for refined in refined_results:
-            if refined.get("status") == "ok":
-                await self.call_agent(self.db_manager_url, {
-                    "json_data": refined["data"],
-                    "pdf_path": refined["pdf_path"]
-                })
-
-    async def call_agent(self, url, payload):
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(url, json=payload)
-                return response.json()
-            except Exception as e:
-                print(f"Error al llamar a {url}: {e}")
-                return {}
-
+        insert_into_ayudas_batch()
+        process_pdfs_to_shared_db()
 
 
 if __name__ == "__main__":

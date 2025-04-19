@@ -13,6 +13,8 @@ model = OpenAIServerModel(
     api_base="https://openrouter.ai/api/v1"
 )
 
+VECTOR_PATH = ""
+
 @tool
 def get_context_from_vector_db(prompt: str) -> str:
     """
@@ -27,7 +29,7 @@ def get_context_from_vector_db(prompt: str) -> str:
     Esta herramienta se usa para extraer información específica desde el contenido textual de un PDF ya embebido en una base de datos vectorial temporal.
     """
     #TODO : Cambiar el path por el dado en la llamada a la función
-    search_from_context_vec_db(prompt, vectorstore_path="vectorstore")
+    search_from_context_vec_db(prompt, vectorstore_path=VECTOR_PATH)
 
 
 agent = CodeAgent(
@@ -36,9 +38,11 @@ agent = CodeAgent(
     additional_authorized_imports=['json']
 )
 
-def run_refinement_agent(path_json):
+def run_refinement_agent(path_json, vector_path):
     with open(path_json, "r", encoding="utf-8") as f:
         json_data = json.load(f)
+        
+    VECTOR_PATH = vector_path
 
     prompt = f"""
 Eres un agente especializado en refinar datos de convocatorias. Tienes acceso a una herramienta llamada `get_context_from_vector_db(query)` que te permite recuperar fragmentos relevantes de un documento PDF (previamente embebido) usando similitud coseno. La base de datos solo contiene información textual del PDF original.
