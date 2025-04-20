@@ -1,6 +1,6 @@
 import json
 import os
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 from selenium.webdriver.chrome.options import Options
 from smolagents import tool
 from selenium import webdriver
@@ -50,32 +50,24 @@ def simplificar_html(html: str) -> str:
     for tag in soup(['script', 'style', 'header', 'footer', 'nav', 'form', 'aside']):
         tag.decompose()
 
-    texto_procesado = []
+    def procesar_nodo(nodo):
+        if isinstance(nodo, NavigableString):
+            return nodo.strip()
+        elif isinstance(nodo, Tag):
+            if nodo.name == 'a':
+                texto = nodo.get_text(strip=True)
+                href = nodo.get('href', '')
+                return f"{texto} ({href})" if href else texto
+            else:
+                contenido = [procesar_nodo(hijo) for hijo in nodo.children]
+                return ' '.join(filter(None, contenido))
+        return ''
 
-    def extraer_texto_con_links(tag):
-        for a in tag.find_all('a'):
-            texto = a.get_text(strip=True)
-            href = a.get('href', '')
-            if href:
-                a.replace_with(f"{texto} ({href})")
-        return tag.get_text(strip=True)
+    cuerpo = soup.body or soup
+    texto_procesado = procesar_nodo(cuerpo)
 
-    for h in soup.find_all(['h1', 'h2', 'h3']):
-        texto = extraer_texto_con_links(h)
-        if texto:
-            texto_procesado.append(f"TÍTULO: {texto}")
+    return texto_procesado
 
-    for p in soup.find_all('p'):
-        texto = extraer_texto_con_links(p)
-        if texto:
-            texto_procesado.append(texto)
-
-    for li in soup.find_all('li'):
-        texto = extraer_texto_con_links(li)
-        if texto:
-            texto_procesado.append(f"- {texto}")
-
-    return "\n".join(texto_procesado)
 
 
 @tool
@@ -107,39 +99,37 @@ def fetch_html_tool(url: str) -> str:
         return f"Error al obtener HTML con Selenium: {str(e)}"
 
 
+import os
+import json
+from typing import List, Dict
+
 @tool
-def save_json_tool(nombre_base: str, datos: list[dict]) -> str:
+def save_json_tool(carpeta_base: str, datos: Dict, nombre_archivo: str) -> str:
     """
-    Esta herramienta guarda una lista de diccionarios como múltiples archivos JSON 
-    en la misma carpeta que el script. Cada archivo se nombra con un índice incremental.
+    Esta herramienta guarda un único diccionario como un archivo JSON en una carpeta especificada.
 
     Args:
-        nombre_base (str): El nombre base para los archivos JSON (ej. 'convocatoria').
-        datos (list[dict]): Lista de convocatorias a guardar. Cada una será un archivo JSON.
+        carpeta_base (str): Ruta de la carpeta donde se guardará el archivo JSON.
+        datos (Dict): Diccionario que representa los datos a guardar.
+        nombre_archivo (str): Nombre del archivo JSON (sin extensión .json).
 
     Returns:
-        str: Mensaje indicando si los archivos fueron guardados correctamente o si ocurrió un error.
+        str: Mensaje indicando si el archivo fue guardado correctamente o si ocurrió un error.
     """
     try:
-        if not isinstance(datos, list):
-            return "Error: 'datos' debe ser una lista de diccionarios."
+        if not isinstance(datos, dict):
+            return "Error: 'datos' debe ser un diccionario."
 
-        ruta_actual = os.path.dirname(os.path.abspath(__file__))
-        mensajes = []
+        carpeta_base_abs = os.path.abspath(carpeta_base)
+        os.makedirs(carpeta_base_abs, exist_ok=True)
 
-        for i, item in enumerate(datos, start=1):
-            if not isinstance(item, dict):
-                mensajes.append(f"Elemento {i} ignorado: no es un diccionario.")
-                continue
+        archivo_json = f"{nombre_archivo}.json"
+        ruta_completa = os.path.join(carpeta_base_abs, archivo_json)
 
-            nombre_archivo = f"{nombre_base}_{i}.json"
-            ruta_completa = os.path.join(ruta_actual, nombre_archivo)
+        with open(ruta_completa, 'w', encoding='utf-8') as f:
+            json.dump(datos, f, indent=4, ensure_ascii=False)
 
-            with open(ruta_completa, 'w', encoding='utf-8') as f:
-                json.dump(item, f, indent=4, ensure_ascii=False)
-
-            mensajes.append(f"Archivo {nombre_archivo} guardado correctamente.")
-
-        return "\n".join(mensajes)
+        return f"{archivo_json} guardado correctamente en {carpeta_base_abs}."
     except Exception as e:
-        return f"Error al guardar JSONs: {str(e)}"
+        return f"Error al guardar JSON: {str(e)}"
+

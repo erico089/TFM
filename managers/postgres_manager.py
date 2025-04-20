@@ -16,7 +16,20 @@ DB_CONFIG = {
     'port': 5432
 }
 
+import json
+import psycopg2
+
 def insert_into_ayudas(path_json, conn):
+    """
+    Inserta los datos del archivo JSON proporcionado en la tabla 'ayudas' de la base de datos.
+    
+    Args:
+        path_json (str): Ruta completa al archivo JSON que contiene la información de la convocatoria.
+        conn (psycopg2.connection): Conexión a la base de datos PostgreSQL.
+    
+    Returns:
+        None
+    """
     with open(path_json, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
@@ -24,6 +37,7 @@ def insert_into_ayudas(path_json, conn):
         conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
+    print("el path json es:{} con id y vec id respectivamente: {} {}".format(path_json, getIdFromFile(path_json), getVectorialIdFromFile(path_json)))
     file_id = getIdFromFile(path_json)
     file_vectorial_id = getVectorialIdFromFile(path_json)
 
@@ -36,18 +50,20 @@ def insert_into_ayudas(path_json, conn):
 
     query = """
         INSERT INTO ayudas (
-            organismo, nombre, linea, fecha_inicio, fecha_fin, objetivo,
-            beneficiarios, año, area, presupuesto_minimo, presupuesto_maximo,
-            duracion_minima, duracion_maxima, intensidad_subvencion, intensidad_prestamo,
-            tipo_financiacion, forma_plazo_cobro, minims, region_aplicacion, tipo_consorcio,
-            costes_elegibles, link_ficha_tecnica, link_orden_bases, link_convocatoria,
+            "organismo", "nombre", "linea", 
+            "fecha_inicio", "fecha_fin", "objetivo", 
+            "beneficiarios", "año", "area", "presupuesto_minimo", "presupuesto_maximo", 
+            "duracion_minima", "duracion_maxima", "intensidad_subvencion", "intensidad_prestamo", 
+            "tipo_financiacion", "forma_plazo_cobro", "minimis", "region_aplicacion", "tipo_consorcio", 
+            "costes_elegibles", "link_ficha_tecnica", "link_convocatoria", "link_orden_bases", 
             id, id_vectorial
         ) VALUES (
-            %(organismo)s, %(nombre)s, %(linea)s, %(fecha_inicio)s, %(fecha_fin)s, %(objetivo)s,
-            %(beneficiarios)s, %(año)s, %(area)s, %(presupuesto_minimo)s, %(presupuesto_maximo)s,
-            %(duracion_minima)s, %(duracion_maxima)s, %(intensidad_subvencion)s, %(intensidad_prestamo)s,
-            %(tipo_financiacion)s, %(forma_plazo_cobro)s, %(minims)s, %(region_aplicacion)s, %(tipo_consorcio)s,
-            %(costes_elegibles)s, %(link_ficha_tecnica)s, %(link_orden_bases)s, %(link_convocatoria)s,
+            %(Organismo convocante)s, %(Nombre de la convocatoria)s, %(Linea de la convocatoria)s, 
+            %(Fecha de inicio de la convocatoria)s, %(Fecha de fin de la convocatoria)s, %(Objetivos de la convocatoria)s, 
+            %(Beneficiarios)s, %(ano)s, %(Área de la convocatoria)s, %(Presupuesto mínimo disponible)s, %(Presupuesto máximo disponible)s, 
+            %(Duración mínima)s, %(Duración máxima)s, %(Intensidad de la subvención)s, %(Intensidad del préstamo)s, 
+            %(Tipo de financiación)s, %(Forma y plazo de cobro)s, %(Minimis)s, %(Región de aplicación)s, %(Tipo de consorcio)s, 
+            %(Costes elegibles)s, %(Link ficha técnica)s, %(Link convocatoria)s, %(Link orden de bases)s, 
             %(id)s, %(id_vectorial)s
         )
     """
@@ -57,8 +73,9 @@ def insert_into_ayudas(path_json, conn):
 
     conn.commit()
     cur.close()
-    conn.close()
+
     print(f"✅ Insertado correctamente: {path_json}")
+
 
 def insert_into_ayudas_batch():
     """
@@ -70,3 +87,4 @@ def insert_into_ayudas_batch():
         if filename.endswith(".json"):
             file_path = os.path.join(directory, filename)
             insert_into_ayudas(file_path, connection)
+    connection.close()
