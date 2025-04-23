@@ -63,6 +63,9 @@ def listJSONs():
         if 'refined' in dirs:
             dirs.remove('refined')
 
+        if 'reference' in dirs:
+            dirs.remove('reference')
+
         for archivo in files:
             if archivo.endswith('.json'):
                 jsons.append(os.path.join(root, archivo))
@@ -73,6 +76,16 @@ def listJSONs():
 
 import tempfile
 import shutil
+
+import time
+import shutil
+import os
+import tempfile
+import json
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 def downloadPDFs(json_file_paths):
     """
@@ -98,6 +111,7 @@ def downloadPDFs(json_file_paths):
     }
     options.add_experimental_option("prefs", prefs)
 
+    # Configuración para el WebDriver
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
 
@@ -119,21 +133,21 @@ def downloadPDFs(json_file_paths):
                 print(f"🟡 Descargando desde: {ficha_url}")
                 driver.get(ficha_url)
 
-                # Nombre temporal esperado del archivo descargado
+                # Esperar hasta que el PDF se haya descargado completamente
                 nombre_descarga_original = os.path.basename(ficha_url)
                 ruta_descargada = os.path.join(carpeta_temp, nombre_descarga_original)
-                ruta_descargando = ruta_descargada + ".crdownload"
+                ruta_descargando = ruta_descargada + ".crdownload"  # Archivo temporal de Chrome
 
-                timeout = 20  # segundos
+                timeout = 30  # Aumentar el timeout si la descarga es lenta
                 start_time = time.time()
                 while True:
                     if os.path.exists(ruta_descargada) and not os.path.exists(ruta_descargando):
                         break
                     if time.time() - start_time > timeout:
-                        raise TimeoutError("⏰ Timeout esperando la descarga del PDF.")
-                    time.sleep(0.5)
+                        raise TimeoutError(f"⏰ Timeout esperando la descarga del PDF desde: {ficha_url}.")
+                    time.sleep(1)  # Espera más tiempo entre comprobaciones
 
-                # Renombramos al destino con el nombre basado solo en el líder
+                # Renombramos el archivo descargado al nombre final deseado
                 shutil.move(ruta_descargada, ruta_destino_final)
                 print(f"✅ Descarga completada y guardada como: {nombre_final}")
             else:
@@ -142,6 +156,7 @@ def downloadPDFs(json_file_paths):
             print(f"❌ Error en {json_path}: {e}")
 
     driver.quit()
+
 
 
 

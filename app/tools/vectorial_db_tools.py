@@ -27,7 +27,7 @@ def save_pdf_at_vec_db(
         vectorstore_path (str): Ruta al directorio donde se guardará la base vectorial.
         chunk_size (int): Tamaño de los fragmentos en caracteres.
         chunk_overlap (int): Número de caracteres que se solapan entre chunks.
-        pdf_id (str, opcional): Si se proporciona, cada chunk se guarda como un dict con {"text": ..., "id": pdf_id}.
+        pdf_id (str, opcional): Si se proporciona, cada chunk se guarda con {"id": pdf_id}.
     """
 
     if not os.path.exists(pdf_path):
@@ -44,10 +44,11 @@ def save_pdf_at_vec_db(
     )
     chunks = splitter.split_documents(docs)
 
-    if pdf_id:
-        print(f"🆔 Añadiendo ID '{pdf_id}' a cada chunk.")
-        for chunk in chunks:
+    print("🧩 Añadiendo metadatos a cada chunk...")
+    for i, chunk in enumerate(chunks, start=1):
+        if pdf_id:
             chunk.metadata["id"] = pdf_id
+        chunk.metadata["fragment"] = i  # fragment numerado secuencialmente
 
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 

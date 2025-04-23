@@ -2,15 +2,20 @@ from smolagents import CodeAgent, OpenAIServerModel
 from dotenv import load_dotenv
 import os
 from tools.tools import fetch_html_tool, save_json_tool
+from azureOpenAIServerModel import AzureOpenAIServerModel
 
 def crawl_convocatoria(url_objetivo: str, id: str):
     load_dotenv()
-    api_key = os.environ["OPENROUTER_API_KEY"]
+    api_key = os.environ["AZURE_OPENAI_KEY"]
+    deployment_name = os.environ["AZURE_OPENAI_MODEL_ID"]
+    api_base = os.environ["AZURE_OPENAI_ENDPOINT"] 
+    api_version = os.environ["AZURE_API_VERSION"] 
 
-    model = OpenAIServerModel(
-        model_id="deepseek/deepseek-chat-v3-0324:free",
+    model = AzureOpenAIServerModel(
+        model_id = deployment_name,
         api_key=api_key,
-        api_base="https://openrouter.ai/api/v1"
+        api_version=api_version,
+        azure_endpoint=api_base
     )
 
     agent = CodeAgent(
@@ -44,33 +49,33 @@ def crawl_convocatoria(url_objetivo: str, id: str):
 
         - Organismo convocante
         - Nombre de la convocatoria
-        - Linea de la convocatoria (la modalidad general dentro de la convocatoria)
-        - Modalidad o tipo específico (por ejemplo: cooperación nacional, individual, etc.)
-        - Beneficiarios (a quién está dirigida la convocatoria)
-        - Presupuesto mínimo disponible (si aplica)
-        - Presupuesto máximo disponible (si aplica)
-        - Fecha de inicio de la convocatoria (o rango inicial del plazo)
-        - Fecha de fin de la convocatoria (o rango final del plazo)
-        - Objetivos de la convocatoria (resumen claro y directo)
-        - Tipo de la convocatoria (subvención, ayuda, préstamo, etc.)
-        - Área de la convocatoria (I+D, Innovación, Inversión, Internacional, u otra)
-        - Duración mínima (con unidad: meses o años)
-        - Duración máxima (con unidad: meses o años)
-        - Tipo de financiación (subvención, préstamo, etc.)
-        - Forma y plazo de cobro (si se especifica)
-        - Minimis (si aplica o no)
-        - Región de aplicación (ámbito geográfico)
-        - Tipo de consorcio (si aplica)
-        - Costes elegibles (principales categorías cubiertas)
-        - Link ficha técnica (enlace a PDF o documento explicativo)
-        - Link convocatoria (enlace directo a la página de la convocatoria)
-        - Link orden de bases (si existe, enlace al documento normativo base)
+        - Linea de la convocatoria
+        - Modalidad o tipo específico
+        - Beneficiarios
+        - Presupuesto mínimo disponible
+        - Presupuesto máximo disponible
+        - Fecha de inicio de la convocatoria
+        - Fecha de fin de la convocatoria
+        - Objetivos de la convocatoria
+        - Tipo de la convocatoria
+        - Área de la convocatoria
+        - Duración mínima
+        - Duración máxima
+        - Tipo de financiación
+        - Forma y plazo de cobro
+        - Minimis
+        - Región de aplicación
+        - Tipo de consorcio
+        - Costes elegibles
+        - Link ficha técnica
+        - Link convocatoria
+        - Link orden de bases
 
     4. Usa la herramienta save_json_tool para guardar cada convocatoria en un archivo separado dentro de la carpeta de data/json/convo_{id}. El nombre de cada archivo debe contener el ID proporcionado ({id}), por ejemplo: {id}_1.json
 
-    5. Devuelve una lista con los nombres de los archivos generados, por ejemplo, siguendo el mismo formato de carpeta:
+    5. Devuelve una lista con los nombres de los archivos generados, por ejemplo, siguiendo el mismo formato de carpeta:
     ["data\\json\\convo_{id}\\{id}_1.json", "data\\json\\convo_{id}\\{id}_2.json"]
-"""
+    """
 
     result = agent.run(prompt)
     print(result)

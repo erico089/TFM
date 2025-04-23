@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from smolagents import tool
 from selenium import webdriver
 from pypdf import PdfReader
+from tools.vectorial_db_tools import search_from_context_vec_db
 
 @tool
 def leer_json(file_path: str) -> dict:
@@ -44,7 +45,20 @@ def leer_pdf(file_path: str) -> str:
         contenido += page.extract_text()
     return contenido
 
-def simplificar_html(html: str) -> str:
+from urllib.parse import urljoin
+
+def simplificar_html(html: str, base_url: str) -> str:
+    """
+    Función para simplificar el HTML, extrayendo solo el contenido relevante,
+    y construyendo URLs absolutas a partir de URLs relativas.
+
+    Args:
+        html (str): El HTML de la página que se va a procesar.
+        base_url (str): La URL base para resolver URLs relativas.
+
+    Returns:
+        str: El HTML simplificado con URLs completas.
+    """
     soup = BeautifulSoup(html, 'html.parser')
 
     for tag in soup(['script', 'style', 'header', 'footer', 'nav', 'form', 'aside']):
@@ -57,6 +71,12 @@ def simplificar_html(html: str) -> str:
             if nodo.name == 'a':
                 texto = nodo.get_text(strip=True)
                 href = nodo.get('href', '')
+
+                if href.startswith('//'):
+                    href = 'https:' + href  
+                elif href.startswith('/'):
+                    href = urljoin(base_url, href) 
+
                 return f"{texto} ({href})" if href else texto
             else:
                 contenido = [procesar_nodo(hijo) for hijo in nodo.children]
@@ -132,4 +152,41 @@ def save_json_tool(carpeta_base: str, datos: Dict, nombre_archivo: str) -> str:
         return f"{archivo_json} guardado correctamente en {carpeta_base_abs}."
     except Exception as e:
         return f"Error al guardar JSON: {str(e)}"
+
+@tool
+def get_organismo_context(vector_path: str) -> str:
+    """
+    Recupera fragmentos relacionados con el organismo convocante desde una base de datos vectorial.
+
+    Args:
+        vector_path (str): Ruta a la base de datos vectorial.
+
+    Returns:
+        str: Fragmentos relevantes que contienen información sobre el organismo convocante.
+    """
+
+    prompt = (
+        "Organismo convocante, entidad organizadora, institución que lanza la convocatoria, "
+        "administración responsable, ministerio, agencia pública, autoridad emisora de ayudas, "
+        "nombre del organismo público, nombre oficial del ente que convoca"
+    )
+
+    return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
+
+@tool
+def get_nombre_convocatoria_context(vector_path: str) -> str:
+    """
+    Recupera fragmentos relacionados con el nombre de la convocatoria desde una base de datos vectorial.
+
+    Args:
+        vector_path (str): Ruta a la base de datos vectorial.
+
+    Returns:
+        str: Fragmentos relevantes que contienen información sobre el nombre de la convocatoria.
+    """
+    prompt = (
+        "Nombre de la convocatoria, título oficial de la convocatoria, denominación de la ayuda, "
+        "nombre del programa, título de la línea de ayudas, denominación completa del proyecto."
+    )
+    return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 

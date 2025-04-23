@@ -21,38 +21,38 @@ class CrawlingManager:
             print("No se encontraron enlaces de convocatorias.")
             return
 
-        # Paso 2: Crawling concurrente
-        for url in links:
-            while True:
-                current_id = str(uuid.uuid4())  # Generamos un nuevo ID único
-                print(f"🔄 Procesando URL {url} con ID {current_id}")
+        # # # # Paso 2: Crawling concurrente
+        # # # for url in links:
+        # # #     while True:
+        # # #         current_id = str(uuid.uuid4())  # Generamos un nuevo ID único
+        # # #         print(f"🔄 Procesando URL {url} con ID {current_id}")
 
-                # Llamamos a crawl_convocatoria, asumiendo que genera los JSON en una carpeta con el id
-                crawl_convocatoria(url, current_id)  # Esta función generará los archivos en la carpeta 'data/json/convo_{current_id}'
+        # # #         # Llamamos a crawl_convocatoria, asumiendo que genera los JSON en una carpeta con el id
+        # # #         crawl_convocatoria(url, current_id)  # Esta función generará los archivos en la carpeta 'data/json/convo_{current_id}'
 
-                # Verificamos los archivos generados en la carpeta correspondiente
-                json_folder = f"data/json/convo_{current_id}"
+        # # #         # Verificamos los archivos generados en la carpeta correspondiente
+        # # #         json_folder = f"data/json/convo_{current_id}"
 
-                if not os.path.exists(json_folder):
-                    print(f"❌ No se encontró la carpeta {json_folder}, pasando a la siguiente URL.")
-                    break
+        # # #         if not os.path.exists(json_folder):
+        # # #             print(f"❌ No se encontró la carpeta {json_folder}, pasando a la siguiente URL.")
+        # # #             break
 
-                # Validamos cada archivo JSON en esa carpeta
-                all_valid = True
-                for filename in os.listdir(json_folder):
-                    if filename.endswith(".json"):
-                        json_path = os.path.join(json_folder, filename)
+        # # #         # Validamos cada archivo JSON en esa carpeta
+        # # #         all_valid = True
+        # # #         for filename in os.listdir(json_folder):
+        # # #             if filename.endswith(".json"):
+        # # #                 json_path = os.path.join(json_folder, filename)
 
-                        if not validate_convocatoria_json(json_path):  # Si no es válido
-                            all_valid = False
+        # # #                 if not validate_convocatoria_json(json_path):  # Si no es válido
+        # # #                     all_valid = False
 
-                # Si todos los JSON son válidos, salimos del bucle
-                if all_valid:
-                    print(f"✅ Todos los archivos JSON para {url} están validados correctamente.")
-                    break  # Salimos del while para ir a la siguiente URL
-                else:
-                    print(f"🔁 Regenerando JSON para {url} (ID anterior: {current_id})...")
-                    # No hacemos break, así que el while repite con un nuevo UUID
+        # # #         # Si todos los JSON son válidos, salimos del bucle
+        # # #         if all_valid:
+        # # #             print(f"✅ Todos los archivos JSON para {url} están validados correctamente.")
+        # # #             break  # Salimos del while para ir a la siguiente URL
+        # # #         else:
+        # # #             print(f"🔁 Regenerando JSON para {url} (ID anterior: {current_id})...")
+        # # #             # No hacemos break, así que el while repite con un nuevo UUID
         
         # Descargar los PDFs
         json_results = listJSONs()
@@ -64,18 +64,18 @@ class CrawlingManager:
         # Refinamiento temporal de los PDFs
         process_temp_pdfs_batch()
 
-        # Paso 3: Refinamiento concurrente
-        refined_results = []
-        for result in json_results:
-            json_name = os.path.splitext(os.path.basename(result))[0]
-            vector_db_path = f"data/temp_vec_db/{getVectorialIdFromFile(json_name)}"
-            refined_json_path = f"data/json/refined/{json_name}.json"
-            print(result,vector_db_path)
-            run_refinement_agent(result, vector_db_path)
-            refined_results.append(refined_json_path)
+        # # # # Paso 3: Refinamiento concurrente
+        # # # refined_results = []
+        # # # for result in json_results:
+        # # #     json_name = os.path.splitext(os.path.basename(result))[0]
+        # # #     vector_db_path = f"data/temp_vec_db/{getVectorialIdFromFile(json_name)}"
+        # # #     refined_json_path = f"data/json/refined/{json_name}.json"
+        # # #     print(result,vector_db_path)
+        # # #     run_refinement_agent(result, vector_db_path)
+        # # #     refined_results.append(refined_json_path)
 
 
 
-        # Paso 4: Guardado en DB
-        insert_into_ayudas_batch()
-        process_pdfs_to_shared_db()
+        # # # # Paso 4: Guardado en DB
+        # # # insert_into_ayudas_batch()
+        # # # process_pdfs_to_shared_db()

@@ -3,18 +3,45 @@ import json
 from smolagents import CodeAgent, OpenAIServerModel, tool
 from dotenv import load_dotenv
 from tools.vectorial_db_tools import search_from_context_vec_db
-from tools.tools import save_json_tool  # ✅ NUEVO: importamos la herramienta
+from tools.tools import save_json_tool 
+from azureOpenAIServerModel import AzureOpenAIServerModel
 
 load_dotenv()
-api_key = os.environ["OPENROUTER_API_KEY"]
+api_key = os.environ["AZURE_OPENAI_KEY"]
+deployment_name = os.environ["AZURE_OPENAI_MODEL_ID"]
+api_base = os.environ["AZURE_OPENAI_ENDPOINT"] 
+api_version = os.environ["AZURE_API_VERSION"] 
 
-model = OpenAIServerModel(
-    model_id="deepseek/deepseek-chat-v3-0324:free",
+model = AzureOpenAIServerModel(
+    model_id = deployment_name,
     api_key=api_key,
-    api_base="https://openrouter.ai/api/v1"
+    api_version=api_version,
+    azure_endpoint=api_base
 )
 
-# 🔧 Tool modificada para aceptar también el vector_path
+campos_a_revisar = [
+    "Organismo convocante",
+    "Nombre de la convocatoria",
+    "Modalidad o tipo específico",
+    "Beneficiarios",
+    "Presupuesto mínimo disponible",
+    "Presupuesto máximo disponible",
+    "Fecha de inicio de la convocatoria",
+    "Fecha de fin de la convocatoria",
+    "Objetivos de la convocatoria",
+    "Tipo de la convocatoria",
+    "Área de la convocatoria",
+    "Duración mínima",
+    "Duración máxima",
+    "Tipo de financiación",
+    "Forma y plazo de cobro",
+    "Minimis",
+    "Región de aplicación",
+    "Costes elegibles",
+    "Intensidad de la subvención",
+    "Intensidad del préstamo"
+]
+
 def build_context_tool(vector_path):
     @tool
     def get_context_from_vector_db(prompt: str) -> str:
@@ -36,83 +63,67 @@ def run_refinement_agent(path_json, vector_path):
     with open(path_json, "r", encoding="utf-8") as f:
         json_data = json.load(f)
 
-    # ✅ Creamos la herramienta personalizada con el path
     context_tool = build_context_tool(vector_path)
-    nombre_archivo = os.path.basename(path_json)
 
     agent = CodeAgent(
         model=model,
-        tools=[context_tool, save_json_tool],  # ✅ Añadimos la nueva herramienta
+        tools=[context_tool, save_json_tool],
         additional_authorized_imports=['json']
     )
 
-    prompt = f"""
-Eres un agente especializado en completar datos de convocatorias públicas. Tienes acceso a una herramienta llamada `get_context_from_vector_db(query)` que permite recuperar fragmentos relevantes de un documento PDF (ya embebido) utilizando similitud semántica. El contenido procede exclusivamente del texto original del PDF.
+    prompt = f"""Eres un agente especializado en el tratamiento de datos de convocatorias públicas.
 
-Se te proporciona un JSON con información **parcial** sobre una convocatoria de ayudas. Algunos campos ya tienen valores, que debes **usar únicamente como contexto**. **No debes revisarlos, evaluarlos ni modificarlos**, salvo que contengan errores evidentes. Tu objetivo es **rellenar los campos vacíos** con información textual clara y verificable del PDF.
+📥 Recibirás un JSON con información de una convocatoria. Este JSON contiene **tanto campos a revisar como campos contextuales**.
 
----
+🔎 Tu tarea es **revisar únicamente los campos incluidos en la siguiente lista**:
 
-**Objetivo principal:**
-Completar exclusivamente los campos que están vacíos, sin alterar los demás. Utiliza el contenido existente como guía para entender el tipo de ayuda, beneficiarios, alcance, etc.
+{campos_a_revisar}
 
----
-
-**Enfoque prioritario en tres campos clave**:
-1. `"ano"`  
-   - Extrae el periodo en que está abierta la convocatoria. Ejemplos válidos:  
-     - "Convocatoria abierta durante todo 2024"  
-     - "Plazo de solicitudes del 15 de marzo al 30 de junio de 2025"
-
-2. `"Intensidad de la subvención"`  
-   - Extrae los porcentajes de subvención según el tipo de beneficiario (PYME, gran empresa, etc.) y según el tipo de proyecto (Investigación industrial, Desarrollo experimental), si se especifica.
-   - Ten en cuenta también factores como cofinanciación con fondos FEDER o zonas geográficas.
-   - Suele presentarse en tablas. **Transforma ese contenido en texto estructurado**.
-   - Ejemplo ideal:
-     ```
-     Hasta 10% para gran empresa; 
-     Hasta 17% para PYME; 
-     Hasta 30% para PYME cofinanciadas con fondos FEDER en Andalucía, Canarias, Castilla-La Mancha, Ceuta, Extremadura y Melilla;
-     Hasta 20% para PYME cofinanciadas en el resto del territorio nacional.
-     ```
-
-3. `"Intensidad del préstamo"`  
-   - Aplica la misma lógica que para la subvención. Busca condiciones diferenciadas, tramos, tipos de interés, garantías o periodos de amortización.
-   - Estructura el contenido en texto claro y detallado.
+No debes modificar los campos que no estén en esta lista. **Su función es ayudarte a entender mejor el contexto de la convocatoria**, y deberás tenerlos muy en cuenta a la hora de interpretar los campos que sí debes procesar.
 
 ---
 
-**Uso de `get_context_from_vector_db`**:
-- Haz preguntas **concretas y específicas** por cada campo vacío.
-- No combines varias preguntas en una sola consulta.
-- Ejemplos:
-  - Para `"ano"`: *¿Cuál es el periodo de presentación de solicitudes?*
-  - Para `"Intensidad de la subvención"`: *¿Qué porcentaje de subvención se ofrece según tipo de empresa o tipo de proyecto?*
-  - Para `"Intensidad del préstamo"`: *¿Qué condiciones o porcentajes se aplican al préstamo ofrecido?*
+Para cada uno de los campos a revisar:
+
+- Si el campo tiene ya un valor, verifícalo usando la herramienta correspondiente.
+- Si no es correcto, corrígelo con base en el contenido de los fragmentos.
+- Si el campo está vacío y puedes completarlo con los fragmentos proporcionados, hazlo.
+
+IMPORTANTE: Usa la información de los campos contextuales para interpretar mejor los fragmentos y entender el significado del campo que estás revisando. Por ejemplo, el campo "Línea de la convocatoria" puede darte pistas muy útiles sobre el tipo de beneficiarios o la intensidad de la subvención.
 
 ---
 
-**Criterios clave**:
-- No inventes información. Solo completa campos vacíos si hay evidencia textual clara.
-- Usa el contenido ya presente en el JSON solo como **ayuda contextual**.
-- Si no encuentras información fiable para un campo vacío, **déjalo tal como está**.
-- No revises ni reescribas campos que ya tienen contenido correcto (excepto si hay errores evidentes).
+Herramientas:
+
+- Cada campo a revisar tiene una herramienta cuyo nombre es muy similar al del campo.
+- Para usarlas correctamente, pásales el path a la base vectorial con la variable `path` (el valor de `{vector_path}`).
+- Las herramientas devuelven fragmentos con texto y metadatos.
+
+En cada fragmento, la metadata contiene una propiedad `fragment`, que es un ID numérico único. Esa es la propiedad que debes usar para la trazabilidad.
 
 ---
 
-**Formato de salida**:
-- Devuelve únicamente el JSON actualizado, sin explicaciones ni comentarios.
+Trazabilidad:
 
----
+- Por cada campo que revises, además del valor final, deberás generar un JSON paralelo con el mismo nombre de campo, pero con sufijo `_ref`.
+- En este JSON paralelo, guarda una lista de los valores `fragment` de los fragmentos que sustentan el valor del campo.
+  Por ejemplo:
+  ```json
+  "Beneficiarios": [27, 32, 54]
+    ```
+    Guardado final:
 
-Una vez hayas completado el JSON, llama a la herramienta `save_json_tool(json_data, filename)` para guardarlo.
-- Guardalo con el mismo nombre que tenia el json con el que has trabajado {nombre_archivo} y pero en la carpeta data/json/refined.
+    Usa la herramienta SaveJSONTool para guardar:
 
----
+    El JSON corregido en: data/json/refined/
 
-Empieza ahora con el siguiente JSON:
-{json.dumps(json_data, indent=2, ensure_ascii=False)}
-"""
+    El JSON de referencias en: data/json/reference/
+
+    Objetivo:
+
+    Tu objetivo es asegurar que todos los campos definidos como relevantes estén verificados, corregidos o completados con evidencia. Y cada valor final debe estar claramente justificado por uno o más fragmentos del documento.
+
+    El JSON de entrada es el siguiente: {json.dumps(json_data, indent=2, ensure_ascii=False)} """
 
     resultado = agent.run(prompt)
 

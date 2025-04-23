@@ -1,0 +1,9 @@
+subvencion = tramo no rembolsabe. dependiendo del tipo de empresa y la linea, y del dasarollo
+
+tramo resmbolsable = intensidad del prestamo
+
+tests unitarios usando un modelo y tal
+
+relacionar info de db con pdf y reforzar el modelo
+
+playwright

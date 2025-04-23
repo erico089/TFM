@@ -11,9 +11,8 @@ services:
       - db
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/ayudas
-    command: python app/main.py
 
-   db:
+  db:
     image: postgres:15
     restart: always
     environment:
@@ -25,3 +24,6 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
+
+volumes:
+  postgres_data:
