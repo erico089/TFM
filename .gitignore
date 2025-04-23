@@ -1,4 +1,5 @@
 .env
 ./convocatorias
 __pycache__/
-./data
+/data/
+
