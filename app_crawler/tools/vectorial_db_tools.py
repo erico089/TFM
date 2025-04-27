@@ -127,7 +127,7 @@ def process_temp_pdfs_batch():
             save_pdf_at_vec_db(pdf_path, db_path)
 
 
-def process_pdfs_to_shared_db(pdf_dir="data/pdf", db_dir="data/vec_ayudas_db"):
+def process_pdfs_to_shared_db(pdf_dir="data/pdf", db_dir="db/vec_ayudas_db"):
     """
     Procesa todos los PDFs en el directorio dado (`pdf_dir`) y guarda sus vectores
     en una única base de datos vectorial ubicada en `db_dir`.

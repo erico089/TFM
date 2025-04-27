@@ -248,3 +248,29 @@ def add_missing_keys_to_json(json_file_path):
     
     except Exception as e:
         print(f"Error al modificar el archivo {json_file_path}: {e}")
+
+
+def load_refined_urls(path: str) -> list:
+    """
+    Carga todas las URLs de los archivos '_refined.txt' en la carpeta indicada.
+    
+    Args:
+    - carpeta (str): La ruta donde se encuentran los archivos '_refined.txt'.
+    
+    Returns:
+    - list: Una lista con todas las URLs encontradas en el archivo '_refined.txt'.
+    """
+    archivo_refinado = None
+    for archivo in os.listdir(path):
+        if archivo.endswith('_refined.txt'):
+            archivo_refinado = os.path.join(path, archivo)
+            break
+
+    if archivo_refinado is None:
+        raise FileNotFoundError("No se encontró ningún archivo que termine en '_refined.txt' en la carpeta.")
+
+    links = []
+    with open(archivo_refinado, 'r', encoding='utf-8') as file:
+        links = [line.strip() for line in file if line.strip()]  # Filtra las líneas vacías
+
+    return links

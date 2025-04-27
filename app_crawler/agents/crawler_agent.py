@@ -37,9 +37,12 @@ def crawl_convocatoria(url_objetivo: str, id: str):
 
     Si detectas más de una convocatoria, **extrae la información por separado para cada una de ellas**, tratándolas como convocatorias distintas.
 
-    3. Para **cada convocatoria identificada**, extrae la siguiente información y estructura el resultado en formato JSON.
+    3. Para **cada convocatoria identificada**, extrae la siguiente información y estructura el resultado en formato JSON. 
 
     MUY IMPORTANTE:
+    - Si la convocatoria no es válida o no existe, **la URL debe redirigir a una página sin información relevante**. En este caso, no se debe generar ningún archivo JSON.
+    - Si la convocatoria es válida y contiene la información requerida (algunos campos almenos), sigue el siguiente formato y asegúrate de extraer los datos correctamente.
+
     - Usa exactamente los nombres de campo listados a continuación, **quitando los paréntesis**.
     - Los paréntesis solo sirven como aclaración para que entiendas qué va en cada campo.
     - Si un campo no está disponible, déjalo vacío.
@@ -55,17 +58,17 @@ def crawl_convocatoria(url_objetivo: str, id: str):
         - Objetivos de la convocatoria
         - Beneficiarios
         - Anio (Se refiere al año de convocatoria o a cuando esta abierta esta)
-        - Área de la convocatoria (Elige una de las siguientes opciones o añadela tu si no crees que cuadre: "I+D", "Innovación", "Inversión", "Internacional")
-        - Presupuesto mínimo disponible (El mínimo que se puede solicitar teniendo en cuenta la región y la linea de la convocatoria)
-        - Presupuesto máximo disponible (El máximo que se puede solicitar teniendo en cuenta la región y la linea de la convocatoria)
-        - Duración mínima (Indica excepciones de duración minima si las hay)
-        - Duración máxima (Indica excepciones de duración maxima si las hay)
-        - Tipo de financiación (tipo de ayuda o financiacion que se ofrece)
-        - Forma y plazo de cobro (explicación de como se cobra la ayuda y en que plazos)
+        - Área de la convocatoria (Elige una de las siguientes opciones o añádela tú si no crees que cuadre: "I+D", "Innovación", "Inversión", "Internacional")
+        - Presupuesto mínimo disponible (El mínimo que se puede solicitar teniendo en cuenta la región y la línea de la convocatoria)
+        - Presupuesto máximo disponible (El máximo que se puede solicitar teniendo en cuenta la región y la línea de la convocatoria)
+        - Duración mínima (Indica excepciones de duración mínima si las hay)
+        - Duración máxima (Indica excepciones de duración máxima si las hay)
+        - Tipo de financiación (tipo de ayuda o financiación que se ofrece)
+        - Forma y plazo de cobro (explicación de cómo se cobra la ayuda y en qué plazos)
         - Minimis (Indica si la ayuda es minimis o no en formato bool, si no se indica nada, indicar false)
-        - Región de aplicación (Dependiendo de la linea de la convocatoria y la convocatoria como tal, a veces se indica una o varias regiónes de aplicación)
+        - Región de aplicación (Dependiendo de la línea de la convocatoria y la convocatoria como tal, a veces se indica una o varias regiones de aplicación)
         - Link ficha técnica (Enlace a la ficha técnica o ficha del instrumento de la convocatoria, si no hay ficha técnica, dejar vacío)
-        - Link convocatoria (Enlace con el que estas trabajando)
+        - Link convocatoria (Enlace con el que estás trabajando)
         - Link orden de bases (Enlace a la orden de bases, si no hay orden de bases, dejar vacío)
 
     4. Usa la herramienta save_json_tool para guardar cada convocatoria en un archivo separado dentro de la carpeta de data/json/convo_{id}. El nombre de cada archivo debe contener el ID proporcionado ({id}), por ejemplo: {id}_1.json

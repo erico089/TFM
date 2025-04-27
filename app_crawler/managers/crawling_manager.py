@@ -8,17 +8,15 @@ from agents.crawler_agent import crawl_convocatoria
 from agents.refinement_agent import run_refinement_agent
 from tools.vectorial_db_tools import process_temp_pdfs_batch, process_pdfs_to_shared_db
 from managers.postgres_manager import insert_into_ayudas_batch, insert_into_ayudas_ref_batch
-from tools.utils import downloadPDFs, listJSONs, validate_convocatoria_json, add_missing_keys_to_json, getVectorialIdFromFile
+from tools.utils import downloadPDFs, listJSONs, validate_convocatoria_json, add_missing_keys_to_json, getVectorialIdFromFile, load_refined_urls
 
 class CrawlingManager:
     def __init__(self):
         pass
     
-    def run(self, start_url: str):
-        # Paso 1: Llamar al agente de navegación
-        # nav_response = await self.call_agent(self.nav_agent_url, {"start_url": start_url})
-        # links = nav_response.get("links", [])
-        links = ['https://www.cdti.es/ayudas/proyectos-de-i-d']
+    def run(self):
+        # Paso 1: Obtener los resultados del agente de navegación
+        links = load_refined_urls('data/nav_urls') 
 
         if not links:
             print("No se encontraron enlaces de convocatorias.")
