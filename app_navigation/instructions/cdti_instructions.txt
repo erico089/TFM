@@ -1,0 +1,40 @@
+Instrucciones para navegar por la web del CDTI y acceder a las ayudas
+El CDTI (Centro para el Desarrollo Tecnológico Industrial) es uno de los principales organismos financiadores en España. A continuación se detallan los pasos necesarios para acceder a las ayudas ofrecidas por el CDTI a través de su página web.
+
+1. Acceso a la página principal del CDTI
+
+Al ingresar a la página principal, verás un menú de navegación en la parte superior.
+
+2. Acceder a la sección "Ayudas y Servicios"
+En la parte superior de la página, localiza y haz clic en el enlace “Ayudas y Servicios”.
+
+Este enlace te llevará a una nueva sección donde podrás encontrar información relacionada con las ayudas ofrecidas por el CDTI.
+
+3. Buscar ayudas utilizando el "Buscador de ayudas"
+Una vez en la sección “Ayudas y Servicios”, en el menú a la izquierda, encontrarás varios enlaces.
+
+Haz clic en el enlace “Buscadores de ayudas”.
+
+Nota: Cuando pases el ratón sobre este enlace, se desplegará un submenú con más opciones.
+
+Dentro de ese submenú, selecciona el enlace “Matriz de ayudas”.
+
+4. Acceder a la "Matriz de ayudas"
+
+Al hacer clic en “Matriz de ayudas”, accederás a la página donde podrás ver una lista de todas las ayudas disponibles.
+
+En esta página, se presentan varias opciones de filtros y búsquedas que te permitirán consultar las ayudas según diferentes criterios (por ejemplo, tipo de ayuda, sector, etc.).
+
+5. Validación de los enlaces de las ayudas
+Una vez que hayas accedido a la “Matriz de ayudas”, encontrarás una lista de enlaces a diversas ayudas y subvenciones.
+
+Es importante verificar que cada enlace realmente lleva a una página que contenga información relevante sobre una convocatoria o subvención.
+
+Si al hacer clic en un enlace se abre una página que no está relacionada con una convocatoria de ayuda o subvención, como páginas generales o con contenido irrelevante, debes descartarla.
+
+Asegúrate de que el enlace conduzca a una página que detalle la información específica de la ayuda, incluyendo requisitos, plazos, y demás detalles relacionados con la convocatoria. Si la página no proporciona esta información, no la consideres como un enlace válido.
+
+Consideraciones adicionales
+Navegación automatizada: No es necesario realizar estos pasos manualmente si se busca automatizar el proceso de navegación. Los pasos anteriores proporcionan una guía de cómo acceder a la sección de ayudas, pero la navegación puede ser automatizada para hacer este proceso más eficiente.
+
+Navegación guiada: El modelo puede seguir estos pasos secuenciales para llegar hasta la "Matriz de ayudas" y extraer la información relevante, como las URLs de las convocatorias disponibles.
