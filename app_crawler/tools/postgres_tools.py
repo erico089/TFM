@@ -23,21 +23,3 @@ def get_db_connection():
         port=5432
     )
 
-@tool
-def get_record_by_id(record_id):
-    """
-    Ejecuta una consulta SELECT para obtener un registro de la tabla 'ayudas' según su ID.
-
-    Args:
-        record_id (int): ID del registro que se desea consultar.
-
-    Returns:
-        tuple: Tupla con los valores de las columnas del registro encontrado, o None si no existe.
-    """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM ayudas WHERE id = %s;", (record_id,))
-    result = cur.fetchone()
-    cur.close()
-    conn.close()
-    return result

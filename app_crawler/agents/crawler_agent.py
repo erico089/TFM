@@ -1,4 +1,4 @@
-from smolagents import CodeAgent, OpenAIServerModel
+from smolagents import CodeAgent
 from dotenv import load_dotenv
 import os
 from tools.tools import fetch_html_tool, save_json_tool
