@@ -61,7 +61,7 @@ def insert_into_ayudas(path_json, conn):
         ) VALUES (
             %(Organismo convocante)s, %(Nombre de la convocatoria)s, %(Linea de la convocatoria)s, 
             %(Fecha de inicio de la convocatoria)s, %(Fecha de fin de la convocatoria)s, %(Objetivos de la convocatoria)s, 
-            %(Beneficiarios)s, %(ano)s, %(Área de la convocatoria)s, %(Presupuesto mínimo disponible)s, %(Presupuesto máximo disponible)s, 
+            %(Beneficiarios)s, %(Anio)s, %(Área de la convocatoria)s, %(Presupuesto mínimo disponible)s, %(Presupuesto máximo disponible)s, 
             %(Duración mínima)s, %(Duración máxima)s, %(Intensidad de la subvención)s, %(Intensidad del préstamo)s, 
             %(Tipo de financiación)s, %(Forma y plazo de cobro)s, %(Minimis)s, %(Región de aplicación)s, %(Tipo de consorcio)s, 
             %(Costes elegibles)s, %(Link ficha técnica)s, %(Link convocatoria)s, %(Link orden de bases)s, 
@@ -89,3 +89,96 @@ def insert_into_ayudas_batch():
             file_path = os.path.join(directory, filename)
             insert_into_ayudas(file_path, connection)
     connection.close()
+
+def insert_into_ayudas_ref_batch():
+    """
+    Inserta múltiples registros en la tabla 'ayudas_ref' a partir de archivos JSON en el directorio 'data/json/ref'.
+    """
+    directory = "data/json/reference"
+    connection = psycopg2.connect(**DB_CONFIG)
+    for filename in os.listdir(directory):
+        if filename.endswith(".json"):
+            file_path = os.path.join(directory, filename)
+            insert_into_ayudas_ref(file_path, connection)
+    connection.close()
+
+def insert_into_ayudas_ref(path_json, conn):
+    """
+    Inserta los datos del archivo JSON proporcionado en la tabla 'ayudas_ref' de la base de datos.
+    
+    Args:
+        path_json (str): Ruta completa al archivo JSON que contiene los fragmentos de referencia.
+        conn (psycopg2.connection): Conexión a la base de datos PostgreSQL.
+    
+    Returns:
+        None
+    """
+    with open(path_json, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    if not conn:
+        conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    print("el path json (ref) es:{} con id y vec id respectivamente: {} {}".format(path_json, getIdFromFile(path_json), getVectorialIdFromFile(path_json)))
+    file_id = getIdFromFile(path_json)
+
+    if not isinstance(data, list):
+        data = [data]
+
+    for item in data:
+        item["id"] = file_id
+
+    query = """
+        INSERT INTO ayudas_ref (
+            id,
+            organismo_ref,
+            nombre_ref,
+            fecha_inicio_ref,
+            fecha_fin_ref,
+            objetivo_ref,
+            beneficiarios_ref,
+            año_ref,
+            presupuesto_minimo_ref,
+            presupuesto_maximo_ref,
+            duracion_minima_ref,
+            duracion_maxima_ref,
+            tipo_financiacion_ref,
+            forma_plazo_cobro_ref,
+            minimis_ref,
+            region_aplicacion_ref,
+            intensidad_subvencion_ref,
+            intensidad_prestamo_ref,
+            tipo_consorcio_ref,
+            costes_elegibles_ref
+        ) VALUES (
+            %(id)s,
+            %(Organismo convocante_ref)s,
+            %(Nombre de la convocatoria_ref)s,
+            %(Fecha de inicio de la convocatoria_ref)s,
+            %(Fecha de fin de la convocatoria_ref)s,
+            %(Objetivos de la convocatoria_ref)s,
+            %(Beneficiarios_ref)s,
+            %(Anio_ref)s,
+            %(Presupuesto mínimo disponible_ref)s,
+            %(Presupuesto máximo disponible_ref)s,
+            %(Duración mínima_ref)s,
+            %(Duración máxima_ref)s,
+            %(Tipo de financiación_ref)s,
+            %(Forma y plazo de cobro_ref)s,
+            %(Minimis_ref)s,
+            %(Región de aplicación_ref)s,
+            %(Intensidad de la subvención_ref)s,
+            %(Intensidad del préstamo_ref)s,
+            %(Tipo de consorcio_ref)s,
+            %(Costes elegibles_ref)s
+        )
+    """
+
+    for item in data:
+        cur.execute(query, item)
+
+    conn.commit()
+    cur.close()
+
+    print(f"✅ Insertado correctamente (ref): {path_json}")

@@ -26,3 +26,26 @@ CREATE TABLE IF NOT EXISTS ayudas (
     organismo TEXT,
     año TEXT
 );
+
+CREATE TABLE IF NOT EXISTS ayudas_ref (
+    id TEXT PRIMARY KEY,
+    organismo_ref INTEGER[],
+    nombre_ref INTEGER[],
+    fecha_inicio_ref INTEGER[],
+    fecha_fin_ref INTEGER[],
+    objetivo_ref INTEGER[],
+    beneficiarios_ref INTEGER[],
+    año_ref INTEGER[],
+    presupuesto_minimo_ref INTEGER[],
+    presupuesto_maximo_ref INTEGER[],
+    duracion_minima_ref INTEGER[],
+    duracion_maxima_ref INTEGER[],
+    tipo_financiacion_ref INTEGER[],
+    forma_plazo_cobro_ref INTEGER[],
+    minimis_ref INTEGER[],
+    region_aplicacion_ref INTEGER[],
+    intensidad_subvencion_ref INTEGER[],
+    intensidad_prestamo_ref INTEGER[],
+    tipo_consorcio_ref INTEGER[],
+    costes_elegibles_ref INTEGER[]
+);

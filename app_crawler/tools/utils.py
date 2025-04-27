@@ -176,27 +176,25 @@ def validate_convocatoria_json(json_path):
         "Organismo convocante",
         "Nombre de la convocatoria",
         "Linea de la convocatoria",
-        "Modalidad o tipo específico",
-        "Beneficiarios",
-        "Presupuesto mínimo disponible",
-        "Presupuesto máximo disponible",
         "Fecha de inicio de la convocatoria",
         "Fecha de fin de la convocatoria",
         "Objetivos de la convocatoria",
-        "Tipo de la convocatoria",
+        "Beneficiarios",
+        "Anio",
         "Área de la convocatoria",
+        "Presupuesto mínimo disponible",
+        "Presupuesto máximo disponible",
         "Duración mínima",
         "Duración máxima",
         "Tipo de financiación",
         "Forma y plazo de cobro",
         "Minimis",
         "Región de aplicación",
-        "Tipo de consorcio",
-        "Costes elegibles",
         "Link ficha técnica",
         "Link convocatoria",
         "Link orden de bases"
     ]
+
 
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
@@ -220,9 +218,10 @@ def add_missing_keys_to_json(json_file_path):
     Dado un archivo JSON, añade tres claves vacías al JSON y guarda el archivo modificado.
     
     Las claves añadidas son:
-    - "año"
     - "intensidad de la subvención"
     - "intensidad del préstamo"
+    - "tipo de consorcio"
+    - "costes elegibles"
     
     Args:
         json_file_path (str): Ruta completa al archivo JSON que se va a modificar.
@@ -236,9 +235,10 @@ def add_missing_keys_to_json(json_file_path):
             data = json.load(f)
 
         # Añadir las nuevas claves con valores vacíos
-        data['ano'] = ''
         data['Intensidad de la subvención'] = ''
         data['Intensidad del préstamo'] = ''
+        data['Tipo de consorcio'] = ''
+        data['Costes elegibles'] = ''
 
         # Guardar el archivo modificado
         with open(json_file_path, 'w', encoding='utf-8') as f:

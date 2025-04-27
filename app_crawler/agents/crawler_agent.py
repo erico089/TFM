@@ -47,29 +47,26 @@ def crawl_convocatoria(url_objetivo: str, id: str):
 
     Lista de campos (en el JSON final **no incluyas el texto entre paréntesis**):
 
-        - Organismo convocante
-        - Nombre de la convocatoria
-        - Linea de la convocatoria
-        - Modalidad o tipo específico
-        - Beneficiarios
-        - Presupuesto mínimo disponible
-        - Presupuesto máximo disponible
+        - Organismo convocante (El organismo que lanza la convocatoria)
+        - Nombre de la convocatoria 
+        - Linea de la convocatoria 
         - Fecha de inicio de la convocatoria
         - Fecha de fin de la convocatoria
         - Objetivos de la convocatoria
-        - Tipo de la convocatoria
-        - Área de la convocatoria
-        - Duración mínima
-        - Duración máxima
-        - Tipo de financiación
-        - Forma y plazo de cobro
-        - Minimis
-        - Región de aplicación
-        - Tipo de consorcio
-        - Costes elegibles
-        - Link ficha técnica
-        - Link convocatoria
-        - Link orden de bases
+        - Beneficiarios
+        - Anio (Se refiere al año de convocatoria o a cuando esta abierta esta)
+        - Área de la convocatoria (Elige una de las siguientes opciones o añadela tu si no crees que cuadre: "I+D", "Innovación", "Inversión", "Internacional")
+        - Presupuesto mínimo disponible (El mínimo que se puede solicitar teniendo en cuenta la región y la linea de la convocatoria)
+        - Presupuesto máximo disponible (El máximo que se puede solicitar teniendo en cuenta la región y la linea de la convocatoria)
+        - Duración mínima (Indica excepciones de duración minima si las hay)
+        - Duración máxima (Indica excepciones de duración maxima si las hay)
+        - Tipo de financiación (tipo de ayuda o financiacion que se ofrece)
+        - Forma y plazo de cobro (explicación de como se cobra la ayuda y en que plazos)
+        - Minimis (Indica si la ayuda es minimis o no en formato bool, si no se indica nada, indicar false)
+        - Región de aplicación (Dependiendo de la linea de la convocatoria y la convocatoria como tal, a veces se indica una o varias regiónes de aplicación)
+        - Link ficha técnica (Enlace a la ficha técnica o ficha del instrumento de la convocatoria, si no hay ficha técnica, dejar vacío)
+        - Link convocatoria (Enlace con el que estas trabajando)
+        - Link orden de bases (Enlace a la orden de bases, si no hay orden de bases, dejar vacío)
 
     4. Usa la herramienta save_json_tool para guardar cada convocatoria en un archivo separado dentro de la carpeta de data/json/convo_{id}. El nombre de cada archivo debe contener el ID proporcionado ({id}), por ejemplo: {id}_1.json
 
