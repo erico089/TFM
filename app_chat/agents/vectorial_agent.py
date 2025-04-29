@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from azureOpenAIServerModel import AzureOpenAIServerModel
 from smolagents import CodeAgent
-from tools.vectorial_tools import search_from_context_back_db_by_id, search_from_context_vec_db
+from tools.vectorial_tools import get_context, get_context_by_id, get_context_by_id_and_fragment
 
 class VectorialAgent:
     def __init__(self):
@@ -22,7 +22,7 @@ class VectorialAgent:
 
         self.agent = CodeAgent(
             model=model,
-            tools=[search_from_context_vec_db, search_from_context_back_db_by_id],
+            tools=[get_context, get_context_by_id, get_context_by_id_and_fragment],
         )
 
     def analyze_prompt(self, prompt: str) -> str:
