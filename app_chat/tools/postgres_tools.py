@@ -76,4 +76,3 @@ def run_query(connection, query, params=None):
         connection.close()
 
     return results
-

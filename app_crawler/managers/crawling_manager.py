@@ -56,28 +56,28 @@ class CrawlingManager:
                     # No hacemos break, así que el while repite con un nuevo UUID
         
         # Descargar los PDFs
-        # # # json_results = listJSONs()
-        # # # print(json_results)
-        # # # for json_file in json_results:
-        # # #     add_missing_keys_to_json(json_file)
-        # # # downloadPDFs(json_results)
+        json_results = listJSONs()
+        print(json_results)
+        for json_file in json_results:
+            add_missing_keys_to_json(json_file)
+        downloadPDFs(json_results)
 
-        # # # # Refinamiento temporal de los PDFs
-        # # # process_temp_pdfs_batch()
+        # Refinamiento temporal de los PDFs
+        process_temp_pdfs_batch()
 
         # Paso 3: Refinamiento concurrente
-        # # # refined_results = []
-        # # # for result in json_results:
-        # # #     json_name = os.path.splitext(os.path.basename(result))[0]
-        # # #     vector_db_path = f"data/temp_vec_db/{getVectorialIdFromFile(json_name)}"
-        # # #     refined_json_path = f"data/json/refined/{json_name}.json"
-        # # #     print(result,vector_db_path)
-        # # #     run_refinement_agent(result, vector_db_path)
-        # # #     refined_results.append(refined_json_path)
+        refined_results = []
+        for result in json_results:
+            json_name = os.path.splitext(os.path.basename(result))[0]
+            vector_db_path = f"data/temp_vec_db/{getVectorialIdFromFile(json_name)}"
+            refined_json_path = f"data/json/refined/{json_name}.json"
+            print(result,vector_db_path)
+            run_refinement_agent(result, vector_db_path)
+            refined_results.append(refined_json_path)
 
 
 
         # Paso 4: Guardado en DB
-        # # # insert_into_ayudas_batch()
-        # # # insert_into_ayudas_ref_batch()
-        # # # process_pdfs_to_shared_db()
+        insert_into_ayudas_batch()
+        insert_into_ayudas_ref_batch()
+        process_pdfs_to_shared_db()

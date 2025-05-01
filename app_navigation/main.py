@@ -10,7 +10,7 @@ def main():
 
     navigation_manager = NavigationManager()
 
-    # asyncio.run(navigation_manager.run(url, instructions_file_path))
+    asyncio.run(navigation_manager.run(url, instructions_file_path))
 
     asyncio.run(navigation_manager.process_urls(urls_file_path))
 

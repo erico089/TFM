@@ -45,10 +45,29 @@ def insert_into_ayudas(path_json, conn):
     if not isinstance(data, list):
         data = [data]
 
+    required_fields = [
+    "Organismo convocante", "Nombre de la convocatoria", "Linea de la convocatoria",
+    "Fecha de inicio de la convocatoria", "Fecha de fin de la convocatoria",
+    "Objetivos de la convocatoria", "Beneficiarios", "Anio",
+    "Área de la convocatoria", "Presupuesto mínimo disponible", "Presupuesto máximo disponible",
+    "Duración mínima", "Duración máxima", "Intensidad de la subvención", "Intensidad del préstamo",
+    "Tipo de financiación", "Forma y plazo de cobro", "Minimis", "Región de aplicación",
+    "Tipo de consorcio", "Costes elegibles", "Link ficha técnica", "Link convocatoria",
+    "Link orden de bases"
+    ]
+
     for item in data:
         item["id"] = file_id
         item["id_vectorial"] = file_vectorial_id
 
+    print("Item keys:", item.keys())
+
+    for field in required_fields:
+            if field not in item:
+                print(f"⚠️ Campo faltante '{field}' en {path_json}. Abortando inserción.")
+                cur.close()
+                return
+            
     query = """
         INSERT INTO ayudas (
             "organismo", "nombre", "linea", 
@@ -126,9 +145,29 @@ def insert_into_ayudas_ref(path_json, conn):
     if not isinstance(data, list):
         data = [data]
 
+    required_fields = [
+        "Organismo convocante_ref", "Nombre de la convocatoria_ref", "Fecha de inicio de la convocatoria_ref",
+        "Fecha de fin de la convocatoria_ref", "Objetivos de la convocatoria_ref", "Beneficiarios_ref", 
+        "Anio_ref", "Presupuesto mínimo disponible_ref", "Presupuesto máximo disponible_ref", 
+        "Duración mínima_ref", "Duración máxima_ref", "Tipo de financiación_ref", 
+        "Forma y plazo de cobro_ref", "Minimis_ref", "Región de aplicación_ref", 
+        "Intensidad de la subvención_ref", "Intensidad del préstamo_ref", "Tipo de consorcio_ref", 
+        "Costes elegibles_ref"
+    ]
+
     for item in data:
         item["id"] = file_id
 
+        for key in item.keys():
+            if key.endswith('_ref') and item[key] is not None:
+                item[key] = json.dumps(item[key], ensure_ascii=False)
+
+        # Validar que el item tiene todos los campos necesarios
+        for field in required_fields:
+            if field not in item:
+                print(f"⚠️ Campo faltante '{field}' en {path_json}. Abortando inserción.")
+                cur.close()
+                return
     query = """
         INSERT INTO ayudas_ref (
             id,

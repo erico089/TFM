@@ -13,54 +13,62 @@ local_model = HuggingFaceEmbeddings(
 import os
 
 def save_pdf_at_vec_db(
-    pdf_path: str,
+    pdf_paths: list,
     vectorstore_path: str,
     chunk_size: int = 500,
-    chunk_overlap: int = 100,
-    pdf_id: str = None
+    chunk_overlap: int = 100
 ):
     """
-    Procesa un PDF y guarda sus embeddings en una base de datos vectorial Chroma.
+    Procesa una lista de PDFs y guarda sus embeddings en una base de datos vectorial Chroma.
 
     Args:
-        pdf_path (str): Ruta al archivo PDF.
+        pdf_paths (list): Lista de rutas de archivos PDF.
         vectorstore_path (str): Ruta al directorio donde se guardará la base vectorial.
         chunk_size (int): Tamaño de los fragmentos en caracteres.
         chunk_overlap (int): Número de caracteres que se solapan entre chunks.
-        pdf_id (str, opcional): Si se proporciona, cada chunk se guarda con {"id": pdf_id}.
     """
 
-    if not os.path.exists(pdf_path):
-        raise FileNotFoundError(f"El archivo {pdf_path} no existe.")
+    if not pdf_paths:
+        raise ValueError("La lista de pdf_paths está vacía.")
 
-    print(f"📄 Cargando PDF desde: {pdf_path}")
-    loader = PyPDFLoader(pdf_path)
-    docs = loader.load()
+    all_chunks = []
 
-    print(f"✂️ Dividiendo en chunks (chunk_size={chunk_size}, overlap={chunk_overlap})...")
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap
-    )
-    chunks = splitter.split_documents(docs)
+    for pdf_path in pdf_paths:
+        if not os.path.exists(pdf_path):
+            raise FileNotFoundError(f"El archivo {pdf_path} no existe.")
 
-    print("🧩 Añadiendo metadatos a cada chunk...")
-    for i, chunk in enumerate(chunks, start=1):
-        if pdf_id:
-            chunk.metadata["id"] = pdf_id
-        chunk.metadata["fragment"] = i  # fragment numerado secuencialmente
+        print(f"📄 Cargando PDF desde: {pdf_path}")
+        loader = PyPDFLoader(pdf_path)
+        docs = loader.load()
+
+        print(f"✂️ Dividiendo en chunks (chunk_size={chunk_size}, overlap={chunk_overlap}) para {pdf_path}...")
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap
+        )
+        chunks = splitter.split_documents(docs)
+
+        # Obtener el id basado en el nombre del archivo (sin extensión)
+        file_name = os.path.splitext(os.path.basename(pdf_path))[0]
+
+        print(f"🧩 Añadiendo metadatos (id={file_name}) a {len(chunks)} chunks...")
+        for i, chunk in enumerate(chunks, start=1):
+            chunk.metadata["id"] = file_name  # <- El id es diferente para cada PDF
+            chunk.metadata["fragment"] = i
+
+        all_chunks.extend(chunks)
 
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
     print(f"💾 Guardando en la base vectorial en: {vectorstore_path}")
     db = Chroma.from_documents(
-        documents=chunks,
+        documents=all_chunks,
         embedding=embedding_model,
         persist_directory=vectorstore_path
     )
     db.persist()
 
-    print(f"✅ Proceso completo. Se han guardado {len(chunks)} chunks en la base vectorial.")
+    print(f"✅ Proceso completo. Se han guardado {len(all_chunks)} chunks en la base vectorial.")
 
 
 def search_from_context_vec_db(
@@ -101,36 +109,49 @@ def search_from_context_vec_db(
 
 def process_temp_pdfs_batch():
     """
-    Processes all PDFs in the 'data/pdf/' directory. For each PDF:
-    
-    - Checks if a vector DB already exists in 'data/temp/_bec_db/' with the same name (excluding the .pdf extension).
-    - If not, it calls the function `savepdfaddbecdb` to create the DB.
+    Procesa todas las carpetas en 'data/pdf/'.
+    Para cada carpeta:
+        - Junta todos los PDFs.
+        - Si no existe una base vectorial en 'data/temp_vec_db/', la crea con todos los PDFs de esa carpeta.
 
-    This avoids reprocessing PDFs that have already been converted into vector DBs.
+    Así se evita re-procesar carpetas ya convertidas en base vectorial.
     """
     pdf_dir = "data/pdf"
     db_dir = "data/temp_vec_db"
 
     os.makedirs(db_dir, exist_ok=True)
 
-    for filename in os.listdir(pdf_dir):
-        if filename.lower().endswith(".pdf"):
-            name_without_ext = os.path.splitext(filename)[0]
-            db_path = os.path.join(db_dir, name_without_ext)
+    for folder_name in os.listdir(pdf_dir):
+        carpeta_path = os.path.join(pdf_dir, folder_name)
 
-            if os.path.exists(db_path):
-                print(f"✅ Skipping '{filename}' (already processed).")
-                continue
+        if not os.path.isdir(carpeta_path):
+            continue  # Saltar si no es una carpeta
 
-            pdf_path = os.path.join(pdf_dir, filename)
-            print(f"🧩 Processing '{filename}'...")
-            save_pdf_at_vec_db(pdf_path, db_path)
+        db_path = os.path.join(db_dir, folder_name)
+
+        if os.path.exists(db_path):
+            print(f"✅ Skipping carpeta '{folder_name}' (base vectorial ya creada).")
+            continue
+
+        # Buscar todos los PDFs dentro de la carpeta
+        pdf_paths = [
+            os.path.join(carpeta_path, f)
+            for f in os.listdir(carpeta_path)
+            if f.lower().endswith(".pdf")
+        ]
+
+        if not pdf_paths:
+            print(f"⚠️ No hay PDFs en la carpeta {folder_name}. Se omite.")
+            continue
+
+        print(f"🧩 Procesando carpeta '{folder_name}' con {len(pdf_paths)} PDFs...")
+        save_pdf_at_vec_db(pdf_paths, db_path)
 
 
 def process_pdfs_to_shared_db(pdf_dir="data/pdf", db_dir="db/vec_ayudas_db"):
     """
-    Procesa todos los PDFs en el directorio dado (`pdf_dir`) y guarda sus vectores
-    en una única base de datos vectorial ubicada en `db_dir`.
+    Procesa todos los PDFs en el directorio dado (`pdf_dir`) y sus subdirectorios, 
+    y guarda sus vectores en una única base de datos vectorial ubicada en `db_dir`.
 
     Evita reprocesar PDFs que ya fueron agregados, verificando si un archivo de marca
     existe en una subcarpeta `processed_files` dentro de `db_dir`.
@@ -139,19 +160,34 @@ def process_pdfs_to_shared_db(pdf_dir="data/pdf", db_dir="db/vec_ayudas_db"):
     processed_dir = os.path.join(db_dir, "processed_files")
     os.makedirs(processed_dir, exist_ok=True)
 
-    for filename in os.listdir(pdf_dir):
-        if filename.lower().endswith(".pdf"):
-            name_without_ext = os.path.splitext(filename)[0]
-            marker_path = os.path.join(processed_dir, f"{name_without_ext}.done")
+    pdf_paths_to_process = []
 
-            if os.path.exists(marker_path):
-                print(f"✅ Skipping '{filename}' (already processed).")
-                continue
+    # Recorrer recursivamente todas las carpetas y subcarpetas
+    for root, _, files in os.walk(pdf_dir):
+        for filename in files:
+            if filename.lower().endswith(".pdf"):
+                name_without_ext = os.path.splitext(filename)[0]
+                marker_path = os.path.join(processed_dir, f"{name_without_ext}.done")
 
-            pdf_path = os.path.join(pdf_dir, filename)
-            print(f"🧩 Processing '{filename}'...")
+                if os.path.exists(marker_path):
+                    print(f"✅ Skipping '{filename}' (already processed).")
+                    continue
 
-            save_pdf_at_vec_db(pdf_path, db_dir,pdf_id=getVectorialIdFromFile(filename))
+                pdf_path = os.path.join(root, filename)
+                pdf_paths_to_process.append((pdf_path, name_without_ext))
 
-            with open(marker_path, "w") as f:
-                f.write("done")
+    if not pdf_paths_to_process:
+        print("⚠️ No hay nuevos PDFs por procesar.")
+        return
+
+    # Procesar todos los PDFs de golpe
+    pdf_files = [pdf_path for pdf_path, _ in pdf_paths_to_process]
+    save_pdf_at_vec_db(pdf_files, db_dir)
+
+    # Crear archivos de marca para cada PDF procesado
+    for _, name_without_ext in pdf_paths_to_process:
+        marker_path = os.path.join(processed_dir, f"{name_without_ext}.done")
+        with open(marker_path, "w") as f:
+            f.write("done")
+
+    print(f"✅ Procesados {len(pdf_paths_to_process)} PDFs.")

@@ -1,10 +1,9 @@
 import os
 import json
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import time
+import shutil
+import tempfile
+import requests
+
 
 def getIdFromFile(file_path: str) -> str:
     """
@@ -72,92 +71,86 @@ def listJSONs():
 
     return jsons
 
-
-
-import tempfile
-import shutil
-
-import time
-import shutil
 import os
-import tempfile
 import json
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+import shutil
+import tempfile
+from playwright.sync_api import sync_playwright
 
 def downloadPDFs(json_file_paths):
     """
-    Descarga PDFs desde la propiedad 'Link ficha técnica' en cada JSON usando Selenium.
-    El PDF se renombra como <id_unico_extraído_con_GetVectorialLeaderFromFile>.pdf.
-    Si ya existe, no se vuelve a descargar.
-
-    Args:
-        json_file_paths (list[str]): Lista de rutas completas a archivos JSON.
+    Descarga PDFs desde 'Link ficha técnica' y 'Link orden de bases' en cada JSON.
+    Crea una carpeta por ID y guarda los PDFs como <id>_ficha.pdf y <id>_bases.pdf.
+    Si ya existen, no se vuelven a descargar.
     """
     destino = 'data/pdf'
     os.makedirs(destino, exist_ok=True)
-
-    carpeta_temp = tempfile.mkdtemp()
-
-    options = Options()
-    options.headless = True
-    prefs = {
-        "download.default_directory": os.path.abspath(carpeta_temp),
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True,
-    }
-    options.add_experimental_option("prefs", prefs)
-
-    # Configuración para el WebDriver
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
 
     for json_path in json_file_paths:
         try:
             with open(json_path, 'r', encoding='utf-8') as f:
                 contenido = json.load(f)
 
+            id_convocatoria = getVectorialIdFromFile(json_path)
+            carpeta_id = os.path.join(destino, id_convocatoria)
+            os.makedirs(carpeta_id, exist_ok=True)
+
+            # --- Descarga ficha técnica ---
             ficha_url = contenido.get('Link ficha técnica')
             if ficha_url and ficha_url.endswith('.pdf'):
-                # Usamos solo el ID extraído como nombre final del PDF
-                nombre_final = f"{getVectorialIdFromFile(json_path)}.pdf"
-                ruta_destino_final = os.path.join(destino, nombre_final)
+                nombre_ficha = f"{id_convocatoria}_ficha.pdf"
+                ruta_ficha = os.path.join(carpeta_id, nombre_ficha)
 
-                if os.path.exists(ruta_destino_final):
-                    print(f"🟢 Ya existe: {nombre_final} — no se descarga de nuevo.")
-                    continue
-
-                print(f"🟡 Descargando desde: {ficha_url}")
-                driver.get(ficha_url)
-
-                # Esperar hasta que el PDF se haya descargado completamente
-                nombre_descarga_original = os.path.basename(ficha_url)
-                ruta_descargada = os.path.join(carpeta_temp, nombre_descarga_original)
-                ruta_descargando = ruta_descargada + ".crdownload"  # Archivo temporal de Chrome
-
-                timeout = 30  # Aumentar el timeout si la descarga es lenta
-                start_time = time.time()
-                while True:
-                    if os.path.exists(ruta_descargada) and not os.path.exists(ruta_descargando):
-                        break
-                    if time.time() - start_time > timeout:
-                        raise TimeoutError(f"⏰ Timeout esperando la descarga del PDF desde: {ficha_url}.")
-                    time.sleep(1)  # Espera más tiempo entre comprobaciones
-
-                # Renombramos el archivo descargado al nombre final deseado
-                shutil.move(ruta_descargada, ruta_destino_final)
-                print(f"✅ Descarga completada y guardada como: {nombre_final}")
+                if not os.path.exists(ruta_ficha):
+                    print(f"🟡 Descargando ficha técnica desde: {ficha_url}")
+                    descargar_pdf(ficha_url, ruta_ficha)
+                else:
+                    print(f"🟢 Ficha técnica ya existe: {nombre_ficha}")
             else:
                 print(f"ℹ️ No hay ficha técnica válida en: {json_path}")
+
+            # --- Descarga orden de bases (opcional) ---
+            bases_url = contenido.get('Link orden de bases')
+            if bases_url and bases_url.endswith('.pdf'):
+                nombre_bases = f"{id_convocatoria}_bases.pdf"
+                ruta_bases = os.path.join(carpeta_id, nombre_bases)
+
+                if not os.path.exists(ruta_bases):
+                    print(f"🟡 Descargando orden de bases desde: {bases_url}")
+                    descargar_pdf(bases_url, ruta_bases)
+                else:
+                    print(f"🟢 Orden de bases ya existe: {nombre_bases}")
+            else:
+                print(f"ℹ️ No hay orden de bases válida en: {json_path}")
+
         except Exception as e:
-            print(f"❌ Error en {json_path}: {e}")
+            print(f"❌ Error procesando {json_path}: {e}")
 
-    driver.quit()
+def descargar_pdf(url, ruta_destino):
+    """Descarga un PDF usando requests con reintentos."""
+    intentos = 0
+    exito = False
 
-
+    while intentos < 3 and not exito:
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/90.0.4430.85 Safari/537.36"
+            }
+            response = requests.get(url, headers=headers, timeout=30)
+            if response.status_code == 200 and 'application/pdf' in response.headers.get('Content-Type', ''):
+                with open(ruta_destino, 'wb') as f:
+                    f.write(response.content)
+                print(f"✅ Descarga completada y guardada en: {ruta_destino}")
+                exito = True
+            else:
+                raise Exception(f"Respuesta inesperada. Status: {response.status_code}, Content-Type: {response.headers.get('Content-Type')}")
+        except Exception as e:
+            intentos += 1
+            print(f"⚠️ Error al descargar {url} (intento {intentos}/3): {e}")
+            if intentos >= 3:
+                print(f"❌ Fallo definitivo al descargar {url}. Se omite este archivo.")
 
 
 def validate_convocatoria_json(json_path):
