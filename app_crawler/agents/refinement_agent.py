@@ -92,45 +92,94 @@ def run_refinement_agent(path_json, vector_path):
 )
 
 
-    prompt = f"""Eres un agente especializado en el tratamiento de datos de convocatorias públicas.
+    prompt = f"""
+    Eres un agente especializado en el tratamiento de datos de convocatorias públicas.
 
-    Recibirás un JSON con información de una convocatoria. Este JSON contiene **tanto campos a revisar como campos contextuales**.
+    Recibirás un JSON que contiene:
+    - **Campos a revisar** (que deberás procesar)
+    - **Campos contextuales** (que solo sirven para entender mejor el contexto)
 
-    Tu tarea es **revisar únicamente los campos incluidos en la siguiente lista**:
+    ---
 
+    **Tu tarea**:
+
+    - **Revisar exclusivamente** los campos incluidos en la siguiente lista:
+    
     {campos_a_revisar}
 
-    No debes modificar los campos que no estén en esta lista. **Su función es ayudarte a entender mejor el contexto de la convocatoria**, y deberás tenerlos muy en cuenta a la hora de interpretar los campos que sí debes procesar, en especial el campo "Línea de la convocatoria".
+    - **No modificar** los campos que no estén en esta lista.
+    - Su función es ayudarte a interpretar mejor el contenido, especialmente el campo "Línea de la convocatoria".
 
-    Para cada uno de los campos a revisar:
+    ---
 
-    - Si el campo tiene ya un valor, verifícalo y si es necesario, matízalo y expándelo usando la herramienta correspondiente.
-    - Si no es correcto, corrígelo con base en el contenido de los fragmentos.
-    - Si el campo está vacío y puedes completarlo con los fragmentos proporcionados, hazlo.
+    **Para cada campo a revisar**:
 
-    IMPORTANTE: Usa la información de los campos contextuales para interpretar mejor los fragmentos y entender el significado del campo que estás revisando. Por ejemplo, el campo "Línea de la convocatoria" puede darte pistas muy útiles sobre el tipo de beneficiarios o la intensidad de la subvención.
+    1. **Si ya tiene un valor**:
+    - Verifica su exactitud.
+    - Si es necesario, matízalo o expándelo utilizando la herramienta correspondiente.
 
-    **Normas adicionales:**
+    2. **Si el valor es incorrecto**:
+    - Corrígelo basándote en los fragmentos proporcionados.
 
-    - Cada campo a revisar tiene una herramienta cuyo nombre es muy similar al del campo.
-    - Para usarlas correctamente, pásales el path a la base vectorial con la variable `path` (el valor de `{vector_path}`).
-    - Las herramientas devuelven fragmentos con texto y metadatos.
-    - Las herramientas tienen descripciones que te ayudarán a entender qué tipo de información puedes esperar de cada una.
-    - En cada fragmento, la metadata contiene una propiedad `fragment` y un `id`, que representa el trozo del pdf original y un ID numérico único. Estas propiedades las debes usar para la trazabilidad.
-    - Para el campo minimis, si este contiene false, y no se ha encontrado referencia, debes guardar el valor de la referencia {-1}. En caso de que sea true y no hayas encontrado referencia dejalo vacío.
+    3. **Si el campo está vacío**:
+    - Complétalo, siempre que sea posible, usando la información de los fragmentos.
 
-    **Trazabilidad:**
+    **Uso de campos contextuales**:
 
-    - Por cada campo que revises, además del valor final, deberás generar un JSON paralelo con el mismo nombre de campo, pero con sufijo `_ref`.
-    - En este JSON paralelo, guarda una listas de objetos con `id'` y `fragment` que encontraras en la metadata de los fragmentos.
-    Por ejemplo:
+    - Siempre debes usar los campos contextuales como apoyo para interpretar correctamente los fragmentos.
+    - **Ejemplo**: El campo "Línea de la convocatoria" puede ser clave para entender mejor a los beneficiarios o el tipo de subvención.
+
+    **Normas sobre herramientas**:
+
+    - Cada campo a revisar tiene una herramienta asociada, con un nombre similar al del campo.
+    - Para usar las herramientas:
+    - Pásales el path de la base vectorial usando la variable `path` (valor: `{vector_path}`).
+    - Las herramientas devuelven fragmentos con:
+    - Texto
+    - Metadatos (incluyen `fragment` y `id`, donde `id` es un número único que identifica el fragmento del PDF original).
+    - Deberas usar estos fragmentos e id para generar el json de referencia explicado más abajo.
+
+    **Trazabilidad obligatoria**:
+
+    - Por cada campo revisado, genera un campo paralelo en un JSON de referencias:
+    - Nombre del campo: igual al original, pero añadiendo el sufijo `_ref`.
+    - Formato del contenido:
+
     ```json
     "Beneficiarios_ref": [
     {{"id": "ID_ficha", "fragment": 27}},
     {{"id": "ID_bases", "fragment": 32}}
     ]
 
-    ```
+        ```
+
+    **Caso especial — Campo "minimis"**:
+
+    - Si el valor es `false` y no encuentras referencia, guarda la referencia como `{-1}`.
+    - Si el valor es `true` y no encuentras referencia, déjalo vacío.
+
+    Reglas para el JSON refinado:
+
+    Debe incluir todos los campos del JSON de entrada (aunque no se hayan modificado o completado).
+
+    Si un campo no ha sido revisado o completado, debe mantenerse con su valor original (aunque sea vacío o nulo).
+
+    No debe faltar ningún campo respecto al JSON inicial.
+
+    Reglas para el JSON de referencias:
+
+    Solo debe contener los campos de la lista de campos a revisar.
+
+    Todos esos campos deben aparecer, incluso si no se encontró referencia.
+
+    Objetivo final:
+
+    Asegurar que todos los campos relevantes están:
+
+    Verificados, Corregidos, Parcialmente Completados
+
+    Cada valor final debe estar respaldado por fragmentos del documento cuando sea posible.
+
     Guardado final:
 
     Usa la herramienta save_json_tool para guardar:
@@ -139,23 +188,11 @@ def run_refinement_agent(path_json, vector_path):
 
     El JSON de referencias en: data/json/reference/
 
-    Ambos JSON deben tener el nombre {json_name}.json
+    Ambos deben llamarse {json_name}.json
 
-    Reglas obligatorias para el JSON Refined:
+    El JSON de entrada es:
 
-    El JSON Refined debe incluir todos los campos del JSON de entrada, aunque no se haya modificado o revisado.
-
-    Si un campo no ha sido analizado o completado, debe mantenerse en el JSON Refined con su valor original (aunque esté vacío o nulo).
-
-    No deben faltar campos respecto al JSON inicial
-
-    Por otra parte, el JSON de referencias debe contener únicamente los campos que han sido revisados o completados.
-
-    Objetivo:
-
-    Tu objetivo es asegurar que todos los campos definidos como relevantes estén verificados, corregidos o completados con evidencia. Y cada valor final debe estar claramente justificado por uno o más fragmentos del documento.
-
-    El JSON de entrada es el siguiente: {json.dumps(json_data, indent=2, ensure_ascii=False)} """
+    {json.dumps(json_data, indent=2, ensure_ascii=False)} """
 
     resultado = agent.run(prompt)
 

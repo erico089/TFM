@@ -1,6 +1,6 @@
 # navigation_manager.py
 
-from agents.navigation_agent import navigate_convocatoria
+from agents.navigation_agent import navigate_convocatoria, verify_convocatoria
 import asyncio
 from playwright.async_api import async_playwright
 import os
@@ -80,3 +80,30 @@ class NavigationManager:
                 file.write(url + "\n")
 
         print(f"Archivo refinado guardado en: {refined_file_path}")
+
+    async def verify_convos(self):
+        """
+        Esta función lee URLs desde 'data/nav_urls/urls_refined.txt' y
+        para cada URL llama a 'verify_convocatoria'.
+        """
+
+        urls_file = "data/nav_urls/urls_refined.txt"
+
+        if not os.path.exists(urls_file):
+            print(f"El archivo {urls_file} no existe.")
+            return
+
+        with open(urls_file, "r", encoding="utf-8") as f:
+            urls = [line.strip() for line in f if line.strip()]
+
+        if not urls:
+            print("No se encontraron URLs en el archivo.")
+            return
+
+        for url in urls:
+            print(f"Procesando URL: {url}")
+            try:
+                await verify_convocatoria(url)
+            except Exception as e:
+                print(f"Error procesando {url}: {str(e)}")
+
