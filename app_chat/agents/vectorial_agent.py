@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from azureOpenAIServerModel import AzureOpenAIServerModel
-from smolagents import CodeAgent
+from smolagents import CodeAgent, tool
 from tools.vectorial_tools import get_context, get_context_by_id, get_context_by_id_and_fragment
 
 class VectorialAgent:
@@ -57,3 +57,17 @@ class VectorialAgent:
         Sigue todas las instrucciones anteriores y responde en consecuencia.
         """
         return self.agent.run(task)
+
+@tool
+def ask_vectorial_agent(prompt: str) -> str:
+    """
+    Envía un prompt al agente vectorial para su análisis.
+
+    Args:
+        prompt (str): El texto o consulta que se desea analizar mediante el agente vectorial.
+
+    Returns:
+        str: Resultado del análisis del agente vectorial.
+    """
+    vectorial_agent = VectorialAgent()
+    return vectorial_agent.analyze_prompt(prompt)

@@ -3,74 +3,17 @@ from dotenv import load_dotenv
 import os
 import psycopg2
 from azureOpenAIServerModel import AzureOpenAIServerModel
-from app_chat.agents.vectorial_agent import VectorialAgent
-from app_chat.agents.postgres_agent import PostgresAgent
+from agents.vectorial_agent import ask_vectorial_agent
+from agents.postgres_agent import ask_postgres_agent
+from tools.postgres_tools import extract_from_id_if_present
 
 class OrchestrationAgent:
     def __init__(self):
         load_dotenv()
-        postgres_user = os.environ["POSTGRES_USER"]
-        postgres_password = os.environ["POSTGRES_PASSWORD"]
         api_key = os.environ["AZURE_OPENAI_KEY"]
         deployment_name = os.environ["AZURE_OPENAI_MODEL_ID"]
         api_base = os.environ["AZURE_OPENAI_ENDPOINT"] 
         api_version = os.environ["AZURE_API_VERSION"] 
-
-        self.connection = psycopg2.connect(
-            dbname='ayudas',
-            user=postgres_user,          
-            password=postgres_password, 
-            host='localhost',
-            port=5432
-        )
-
-        self.vectorial_agent = VectorialAgent()
-        self.postgres_agent = PostgresAgent()
-
-        @tool
-        def ask_vectorial_agent(prompt):
-            """
-            Envía un prompt al agente vectorial para su análisis.
-
-            Args:
-                prompt (str): El texto o consulta que se desea analizar mediante el agente vectorial.
-
-            Returns:
-                Resultado del análisis del agente vectorial.
-            """
-            return self.vectorial_agent.analyze_prompt(prompt)
-
-        @tool
-        def ask_postgres_agent(prompt):
-            """
-            Envía un prompt al agente de PostgreSQL para su análisis.
-
-            Args:
-                prompt (str): El texto o consulta que se desea analizar mediante el agente de PostgreSQL.
-
-            Returns:
-                Resultado del análisis del agente de PostgreSQL.
-            """
-            return self.postgres_agent.analyze_prompt(prompt)
-
-        @tool
-        def extract_from_id_if_present( id):
-            """
-            Ejecuta una consulta SELECT con JOIN para obtener un registro de la tabla 'ayudas' y 'ayudas_ref' según su ID.
-
-            Args:
-                id (int): ID del registro que se desea consultar.
-
-            Returns:
-                tuple: Tupla con los valores de las columnas del registro encontrado, o None si no existe. Algunas columnas tendran otras con el mismo nombre _ref, si estas tienen valor, aseguran la calidad de los datos.
-            """
-
-            cur = self.connection.cursor()
-            cur.execute("select * from ayudas inner join ayudas_ref on ayudas.id = ayudas_ref.id where ayudas.id = %s;", (id,))
-            result = cur.fetchone()
-            cur.close()
-            self.connection.close()
-            return result
 
         model = AzureOpenAIServerModel(
             model_id = deployment_name,
@@ -102,7 +45,7 @@ class OrchestrationAgent:
 
         Debes priorizar el uso de ask_postgres_agent cuando la consulta esté relacionada con alguno de los siguientes campos:
         - Nombre de la convocatoria
-        - Linea de la convocatoria
+        - Línea de la convocatoria
         - Duración mínima
         - Duración máxima
         - Organismo convocante
@@ -110,7 +53,7 @@ class OrchestrationAgent:
         - Fecha de fin de la convocatoria
         - Objetivos de la convocatoria
         - Beneficiarios
-        - Anio
+        - Año
         - Área de la convocatoria
         - Presupuesto mínimo disponible
         - Presupuesto máximo disponible
@@ -129,7 +72,7 @@ class OrchestrationAgent:
         3. **ask_vectorial_agent**: Consulta una base vectorial más flexible y semántica. Úsala si:
         - Postgres no puede resolver completamente.
         - Postgres devuelve un ID de fichero y necesitas más detalles.
-        - Necesitas información adicional o especifica que no está en la base de datos estructurada.
+        - Necesitas información adicional o específica que no está en la base de datos estructurada.
         - Siempre que uses ask_vectorial_agent y dispongas de un ID de fichero, pásalo para enfocar la búsqueda de forma precisa.
 
         4. **DuckDuckGoSearchTool**: Realiza búsquedas generales en Internet. Úsala si:
@@ -141,14 +84,15 @@ class OrchestrationAgent:
         - **Luego intenta resolver con Postgres** usando los campos relevantes.
         - **Si Postgres no puede** o **devuelve un ID de fichero**, usa ask_vectorial_agent para buscar detalles, pasando siempre ese ID de fichero.
         - **En último caso, usa DuckDuckGo** si es necesario.
-        - Cuando debas listar varias convocatorias como respuesta, **asegúrate de que cada convocatoria esté claramente identificada**, proporcionando como mínimo:
-        - El **nombre completo** de la convocatoria.
+        - Cuando debas listar varias convocatorias como respuesta, **hazlo de manera humana y natural**, comentando los detalles más relevantes de cada una en un lenguaje cercano, en lugar de enumerar campos de forma rígida (salvo que el usuario pida expresamente un listado técnico).
 
-        Esto facilitará que si el usuario dice "me interesa la primera" o "quiero más información sobre la segunda", puedas rastrear exactamente a qué convocatoria se refiere.
+        - Si encuentras convocatorias incorrectas, inconsistentes o poco fiables, **no las muestres** directamente al usuario a menos que sean relevantes y puedas justificarlo.
 
-        **Importante**:
-        - **No inventes datos**. Si no encuentras la información, explica claramente qué herramientas usaste y que no has podido encontrar una respuesta completa.
-        - **Responde de forma precisa, estructurada y comprensible** para el usuario.
+        - **Nunca inventes datos**. Si no encuentras la información, explica claramente qué herramientas usaste y que no has podido encontrar una respuesta completa.
+
+        - Tu salida final debe ser un **objeto** que contenga dos partes:
+            - **"human_readable_answer"**: una respuesta natural, bien explicada y cercana para el usuario.
+            - **"internal_agent_answer"**: una respuesta más técnica que puede incluir IDs, nombres exactos, fechas u otros datos internos que podrían ser necesarios para que otros agentes continúen el proceso más eficientemente.
 
         Contexto de conversación anterior (últimos mensajes relevantes):
         {context}
@@ -160,3 +104,4 @@ class OrchestrationAgent:
         """
 
         return self.agent.run(orchestration_prompt)
+

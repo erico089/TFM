@@ -1,7 +1,9 @@
 # main.py
+from managers.orquestation_manager import OrchestrationManager
 
 def main():
-    print("main")
+    manager = OrchestrationManager()
+    manager.start_chat()
 
 if __name__ == "__main__":
     main()

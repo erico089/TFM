@@ -245,22 +245,22 @@ def add_missing_keys_to_json(json_file_path):
 
 def load_refined_urls(path: str) -> list:
     """
-    Carga todas las URLs de los archivos '_refined.txt' en la carpeta indicada.
+    Carga todas las URLs de los archivos '_verifyed.txt' en la carpeta indicada.
     
     Args:
-    - carpeta (str): La ruta donde se encuentran los archivos '_refined.txt'.
+    - carpeta (str): La ruta donde se encuentran los archivos '_verifyed.txt'.
     
     Returns:
-    - list: Una lista con todas las URLs encontradas en el archivo '_refined.txt'.
+    - list: Una lista con todas las URLs encontradas en el archivo '_verifyed.txt'.
     """
     archivo_refinado = None
     for archivo in os.listdir(path):
-        if archivo.endswith('_refined.txt'):
+        if archivo.endswith('_verifyed.txt'):
             archivo_refinado = os.path.join(path, archivo)
             break
 
     if archivo_refinado is None:
-        raise FileNotFoundError("No se encontró ningún archivo que termine en '_refined.txt' en la carpeta.")
+        raise FileNotFoundError("No se encontró ningún archivo que termine en '_verifyed.txt' en la carpeta.")
 
     links = []
     with open(archivo_refinado, 'r', encoding='utf-8') as file:
