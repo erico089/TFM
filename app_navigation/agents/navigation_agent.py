@@ -105,11 +105,10 @@ async def verify_convocatoria(url: str):
     """
     Recibe una URL, la carga y verifica si es una página de convocatorias de ayudas.
     Si es válida, guarda la URL en data/nav_urls/urls_verifyed.txt (añadiéndola, no sobrescribiéndola).
-    Si no, intenta navegar hasta tres veces para encontrar una página válida.
+    Si no, intenta navegar para encontrar páginas válidas.
     """
 
     os.makedirs("data/nav_urls", exist_ok=True)
-
     file_path = "data/nav_urls/urls_verifyed.txt"
 
     if not os.path.exists(file_path):
@@ -129,15 +128,16 @@ async def verify_convocatoria(url: str):
     ¿Cómo debe ser una página de convocatoria?
 
     - Debe contener información sobre aspectos como: 
-    - Nombre de la ayuda
-    - Beneficiarios
-    - Bases reguladoras
-    - Precios o importes de la subvención
-    - Ficha técnica
-    - Procedimientos de solicitud
+      - Nombre de la ayuda
+      - Beneficiarios
+      - Bases reguladoras
+      - Precios o importes de la subvención
+      - Ficha técnica
+      - Procedimientos de solicitud
     - El contenido debe ser claro y específico sobre una ayuda o subvención.
 
-    Importante: Si no contiene toda la información relevante, la puedes considerar valida. No sera valida cuando solo tenga 1 o 2 campos de información (a no ser que esos dos campos sean el nombre y la ficha tecnica) o sea una mera explicacion de como funciona.
+    Importante: Si no contiene toda la información relevante, la puedes considerar válida. No será válida si solo tiene 1 o 2 campos de información (a no ser que esos campos sean el nombre y la ficha técnica) o si es solo una breve explicación genérica.
+
     Pasos a seguir:
 
     1. **Cargar la página de la URL proporcionada.**
@@ -145,30 +145,30 @@ async def verify_convocatoria(url: str):
     2. **Verificar si la página cumple los requisitos** de una página de convocatoria de ayudas.
 
     3. **Si la página es válida**:
-    - Añade la URL al fichero `data/nav_urls/urls_verifyed.txt`.
-    - Usa el modo "append" (añadir al final, sin sobrescribir el archivo existente).
-    - Termina el trabajo.
+      - Añade la URL al fichero `data/nav_urls/urls_verifyed.txt` (modo "append", sin sobrescribir).
+      - Termina el trabajo.
 
     4. **Si la página no es válida**:
-    - Busca enlaces en la página que parezcan llevar a convocatorias o ayudas. 
-    - Algunos ejemplos de enlaces relevantes: "Ver convocatoria", "Bases reguladoras", "Acceder a la ayuda", "Información completa", "Detalles de la convocatoria", etc.
-    - Haz clic en uno de esos enlaces relevantes para navegar a otra página.
-    - Vuelve al paso 2 y verifica la nueva página.
-    - Puedes hacer un máximo de **5 acciones de clic** en total para intentar encontrar una página válida.
-    - Ten en cuenta que a veces las paginas pueden derivar a mas de una convocatoria, por lo que añadiras tantas como encuentres.
+      - Examina si la página actúa como un "índice de convocatorias" (por ejemplo, lista enlaces a convocatorias de diferentes años).
+      - Si detectas este patrón:
+        - **Recorre todos los enlaces relevantes** que parezcan llevar a convocatorias específicas.
+        - Carga cada enlace individualmente.
+        - Aplica la verificación de nuevo en cada uno.
+        - Guarda todas las URLs que correspondan a convocatorias válidas.
+        - No apliques límite de número de acciones en este caso.
+      - Si no detectas un "índice de convocatorias" (es decir, solo ves 1 o 2 enlaces o ninguno relacionado):
+        - Busca enlaces relevantes como: "Ver convocatoria", "Bases reguladoras", "Acceder a la ayuda", "Información completa", "Detalles de la convocatoria", etc.
+        - Puedes hacer un máximo de **5 acciones de clic** en total para intentar encontrar una página válida.
 
-    5. **Si después de 5 acciones no encuentras una página válida**:
-    - No guardes ninguna URL.
-    - Termina el trabajo.
-
-    6. **Si antes de 5 acciones encuentras una página válida**:
-    - Guarda la URL en el fichero `data/nav_urls/urls_verifyed.txt` y termina el trabajo.
+    5. **Si después de 5 acciones normales no encuentras una página válida**:
+      - No guardes ninguna URL.
+      - Termina el trabajo.
 
     Reglas adicionales:
 
     - No recojas enlaces a noticias, comunicados de prensa, eventos, boletines o documentos genéricos.
     - No guardes enlaces que den error o no carguen correctamente.
-    - Debes actuar de forma eficiente: no hagas clics innecesarios si ya ves que el enlace no lleva a convocatorias.
+    - Actúa de forma eficiente: no hagas clics innecesarios si ya ves que un enlace no lleva a convocatorias.
 
     Recuerda: tu tarea principal es **garantizar que solo guardas URLs que verdaderamente correspondan a convocatorias de ayudas**.
     """
@@ -179,8 +179,9 @@ async def verify_convocatoria(url: str):
         browser=browser,
         controller=controller,
     )
-    
-    await agent.run(max_steps=30)
+
+    await agent.run(max_steps=25)  # Aumento el máximo un poco por si navega mucho en índice
     await browser.close()
 
     print(f"Agent finished processing URL: {url}")
+
