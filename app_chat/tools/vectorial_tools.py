@@ -1,6 +1,7 @@
 from smolagents import tool
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
+from dotenv import load_dotenv
 
 @tool
 def get_context(prompt: str) -> list:
@@ -18,6 +19,10 @@ def get_context(prompt: str) -> list:
     k = 10
 
     vectorstore_path = "db/vec_ayudas_db"
+
+    load_dotenv()
+    if os.getenv("ENVIRONMENT") == "TEST":
+        vectorstore_path = "db_test"
 
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
@@ -50,6 +55,10 @@ def get_context_by_id(prompt: str, doc_id: str) -> list:
 
     vectorstore_path = "db/vec_ayudas_db"
 
+    load_dotenv()
+    if os.getenv("ENVIRONMENT") == "TEST":
+        vectorstore_path = "db_test"
+
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
     db = Chroma(
@@ -78,6 +87,10 @@ def get_context_by_id_and_fragment(prompt: str, doc_id: str, fragment_id: int) -
 
     vectorstore_path = "db/vec_ayudas_db"
 
+    load_dotenv()
+    if os.getenv("ENVIRONMENT") == "TEST":
+        vectorstore_path = "db_test"
+
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
     db = Chroma(
@@ -95,3 +108,68 @@ def get_context_by_id_and_fragment(prompt: str, doc_id: str, fragment_id: int) -
         ]
         }
     )
+
+
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+import os
+
+local_model = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
+
+def save_pdf_at_vec_db(
+    pdf_paths: list,
+    vectorstore_path: str,
+    chunk_size: int = 500,
+    chunk_overlap: int = 100
+):
+    """
+    Procesa una lista de PDFs y guarda sus embeddings en una base de datos vectorial Chroma.
+
+    Args:
+        pdf_paths (list): Lista de rutas de archivos PDF.
+        vectorstore_path (str): Ruta al directorio donde se guardará la base vectorial.
+        chunk_size (int): Tamaño de los fragmentos en caracteres.
+        chunk_overlap (int): Número de caracteres que se solapan entre chunks.
+    """
+
+    if not pdf_paths:
+        raise ValueError("La lista de pdf_paths está vacía.")
+
+    all_chunks = []
+
+    for pdf_path in pdf_paths:
+        if not os.path.exists(pdf_path):
+            raise FileNotFoundError(f"El archivo {pdf_path} no existe.")
+
+        loader = PyPDFLoader(pdf_path)
+        docs = loader.load()
+
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap
+        )
+        chunks = splitter.split_documents(docs)
+
+        file_name = os.path.splitext(os.path.basename(pdf_path))[0]
+
+        for i, chunk in enumerate(chunks, start=1):
+            chunk.metadata["id"] = file_name
+            chunk.metadata["fragment"] = i
+
+        all_chunks.extend(chunks)
+
+    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+    print(f"💾 Guardando en la base vectorial en: {vectorstore_path}")
+    db = Chroma.from_documents(
+        documents=all_chunks,
+        embedding=embedding_model,
+        persist_directory=vectorstore_path
+    )
+    db.persist()
+
+    print(f"✅ Proceso completo. Se han guardado {len(all_chunks)} chunks en la base vectorial.")

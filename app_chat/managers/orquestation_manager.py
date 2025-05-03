@@ -3,21 +3,6 @@ import time
 from agents.orquestation_agent import OrchestrationAgent
 from logging_setup import redirect_stdout_to_logger
 
-import threading
-import time
-from agents.orquestation_agent import OrchestrationAgent
-from logging_setup import redirect_stdout_to_logger
-
-import threading
-import time
-from agents.orquestation_agent import OrchestrationAgent
-from logging_setup import redirect_stdout_to_logger
-
-import threading
-import time
-from agents.orquestation_agent import OrchestrationAgent
-from logging_setup import redirect_stdout_to_logger
-
 class OrchestrationManager:
     def __init__(self):
         self.agent = OrchestrationAgent()

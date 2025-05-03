@@ -6,7 +6,7 @@ from smolagents import CodeAgent, tool
 from tools.postgres_tools import get_record_by_id, get_record_by_id_vectorial, run_query
 
 class PostgresAgent:
-    def __init__(self):
+    def __init__(self, database_name: str = 'ayudas'):
         
         load_dotenv()
 
@@ -17,8 +17,10 @@ class PostgresAgent:
         api_base = os.environ["AZURE_OPENAI_ENDPOINT"] 
         api_version = os.environ["AZURE_API_VERSION"] 
 
+        self.table_name = database_name
+
         self.connection = psycopg2.connect(
-            dbname='ayudas',
+            dbname= self.table_name,
             user=postgres_user,          
             password=postgres_password, 
             host='localhost',
@@ -44,9 +46,9 @@ class PostgresAgent:
 
         Dado el siguiente prompt de usuario: "{prompt}", tu tarea es:
         - Utilizar las herramientas disponibles para consultar la base de datos y obtener toda la información necesaria.
-        - Siempre que uses una herramienta, debes pasarle la conexión: por ejemplo, `run_query(self.connection, "SELECT * FROM ayudas")`.
+        - Siempre que uses una herramienta, debes pasarle la conexión: por ejemplo, `run_query(self.connection, "SELECT * FROM {self.table_name}")`.
         - Dispones de las siguientes herramientas:
-            - `run_query`: para ejecutar consultas SQL personalizadas (principalmente sobre la tabla "ayudas"). Ten en cuenta que todos los campos a exepcion de ambas tablas son de tipo text.
+            - `run_query`: para ejecutar consultas SQL personalizadas (principalmente sobre la tabla {self.table_name}). Ten en cuenta que todos los campos a exepcion de ambas tablas son de tipo text.
             - `get_record_by_id` y `get_record_by_id_vectorial`: para recuperar registros específicos a partir del ID o ID vectorial.
 
         Instrucciones importantes:
@@ -78,5 +80,10 @@ def ask_postgres_agent(prompt: str) -> str:
     Returns:
         str: Resultado del análisis del agente de PostgreSQL.
     """
-    postgres_agent = PostgresAgent()
+    load_dotenv()
+    if os.getenv("ENVIRONMENT") == "TEST":
+        postgres_agent = PostgresAgent('ayudas_mock')
+    else:
+        postgres_agent = PostgresAgent()
+
     return postgres_agent.analyze_prompt(prompt)
