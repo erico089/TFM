@@ -62,7 +62,6 @@ def setup_database():
     CREATE TABLE IF NOT EXISTS ayudas_mock_ref (
         id TEXT PRIMARY KEY,
         organismo_ref TEXT,
-        nombre_ref TEXT,
         fecha_inicio_ref TEXT,
         fecha_fin_ref TEXT,
         objetivo_ref TEXT,

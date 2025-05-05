@@ -94,14 +94,41 @@ def insert_into_ayudas(path_json, conn):
     conn.commit()
     cur.close()
 
-    print(f"✅ Insertado correctamente: {path_json}")
+    print(f"Insertado correctamente: {path_json}")
+
+import os
+import json
+
+def fix_minimis_in_jsons(carpeta):
+    for nombre_archivo in os.listdir(carpeta):
+        if nombre_archivo.endswith('.json'):
+            ruta_archivo = os.path.join(carpeta, nombre_archivo)
+            
+            with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                try:
+                    datos = json.load(f)
+                except json.JSONDecodeError:
+                    print(f"Error al leer {nombre_archivo}, saltando...")
+                    continue
+            
+            if 'Minimis' in datos:
+                valor = datos['Minimis']
+                if isinstance(valor, str):
+                    valor_normalizado = valor.strip().lower()
+                    if valor_normalizado == 'true':
+                        datos['Minimis'] = True
+                    else:
+                        datos['Minimis'] = False
+
+            with open(ruta_archivo, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, indent=4, ensure_ascii=False)
 
 
-def insert_into_ayudas_batch():
+def insert_into_ayudas_batch(base_path: str):
     """
     Inserta múltiples registros en la tabla 'ayudas' a partir de archivos JSON en un directorio específico.
     """
-    directory = "data/json/refined"
+    directory = f"{base_path}/refined"
     connection = psycopg2.connect(**DB_CONFIG)
     for filename in os.listdir(directory):
         if filename.endswith(".json"):
@@ -109,11 +136,11 @@ def insert_into_ayudas_batch():
             insert_into_ayudas(file_path, connection)
     connection.close()
 
-def insert_into_ayudas_ref_batch():
+def insert_into_ayudas_ref_batch(base_path: str):
     """
     Inserta múltiples registros en la tabla 'ayudas_ref' a partir de archivos JSON en el directorio 'data/json/ref'.
     """
-    directory = "data/json/reference"
+    directory = f"{base_path}/reference"
     connection = psycopg2.connect(**DB_CONFIG)
     for filename in os.listdir(directory):
         if filename.endswith(".json"):
@@ -124,11 +151,11 @@ def insert_into_ayudas_ref_batch():
 def insert_into_ayudas_ref(path_json, conn):
     """
     Inserta los datos del archivo JSON proporcionado en la tabla 'ayudas_ref' de la base de datos.
-    
+
     Args:
         path_json (str): Ruta completa al archivo JSON que contiene los fragmentos de referencia.
         conn (psycopg2.connection): Conexión a la base de datos PostgreSQL.
-    
+
     Returns:
         None
     """
@@ -139,14 +166,14 @@ def insert_into_ayudas_ref(path_json, conn):
         conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-    print("el path json (ref) es:{} con id y vec id respectivamente: {} {}".format(path_json, getIdFromFile(path_json), getVectorialIdFromFile(path_json)))
+    print(f"El path json (ref) es: {path_json} con id y vec id respectivamente: {getIdFromFile(path_json)} {getVectorialIdFromFile(path_json)}")
     file_id = getIdFromFile(path_json)
 
     if not isinstance(data, list):
         data = [data]
 
     required_fields = [
-        "Organismo convocante_ref", "Nombre de la convocatoria_ref", "Fecha de inicio de la convocatoria_ref",
+        "Organismo convocante_ref", "Fecha de inicio de la convocatoria_ref",
         "Fecha de fin de la convocatoria_ref", "Objetivos de la convocatoria_ref", "Beneficiarios_ref", 
         "Anio_ref", "Presupuesto mínimo disponible_ref", "Presupuesto máximo disponible_ref", 
         "Duración mínima_ref", "Duración máxima_ref", "Tipo de financiación_ref", 
@@ -162,17 +189,15 @@ def insert_into_ayudas_ref(path_json, conn):
             if key.endswith('_ref') and item[key] is not None:
                 item[key] = json.dumps(item[key], ensure_ascii=False)
 
-        # Validar que el item tiene todos los campos necesarios
         for field in required_fields:
             if field not in item:
-                print(f"⚠️ Campo faltante '{field}' en {path_json}. Abortando inserción.")
-                cur.close()
-                return
+                print(f"Campo faltante '{field}' en {path_json}. Creando campo vacío.")
+                item[field] = None
+
     query = """
         INSERT INTO ayudas_ref (
             id,
             organismo_ref,
-            nombre_ref,
             fecha_inicio_ref,
             fecha_fin_ref,
             objetivo_ref,
@@ -193,7 +218,6 @@ def insert_into_ayudas_ref(path_json, conn):
         ) VALUES (
             %(id)s,
             %(Organismo convocante_ref)s,
-            %(Nombre de la convocatoria_ref)s,
             %(Fecha de inicio de la convocatoria_ref)s,
             %(Fecha de fin de la convocatoria_ref)s,
             %(Objetivos de la convocatoria_ref)s,
@@ -221,3 +245,4 @@ def insert_into_ayudas_ref(path_json, conn):
     cur.close()
 
     print(f"✅ Insertado correctamente (ref): {path_json}")
+

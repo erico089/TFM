@@ -126,17 +126,88 @@ def fetch_html_tool(url: str) -> str:
 
 import os
 import json
-from typing import List, Dict
+from typing import Dict
+
+@tool
+def save_json_field_tool(path_json: str, field_name: str, value: str) -> str:
+    """
+    Guarda o actualiza el valor de un campo específico en un archivo JSON. 
+    Si el archivo no existe, lo crea.
+
+    Args:
+        path_json (str): Ruta al archivo JSON.
+        field_name (str): Nombre del campo a guardar o actualizar.
+        value (str): Valor que se asignará al campo.
+
+    Returns:
+        str: Mensaje de confirmación o de error.
+    """
+    try:
+        if not os.path.exists(path_json):
+            data = {}
+        else:
+            with open(path_json, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+        data[field_name] = value
+
+        with open(path_json, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
+        return f"Campo '{field_name}' guardado correctamente en {path_json}."
+    except Exception as e:
+        return f"Error al guardar el campo '{field_name}' en {path_json}: {str(e)}"
+
+
+@tool
+def add_field_ref_json_tool(path_json: str, field_name_ref: str, id_doc: str, fragments: list) -> str:
+    """
+    Añade referencias a un campo de referencias en un archivo JSON. 
+    Si el archivo no existe, lo crea.
+
+    Args:
+        path_json (str): Ruta al archivo JSON.
+        field_name_ref (str): Nombre del campo de referencias a actualizar o crear.
+        id_doc (str): ID del documento de origen de los fragmentos.
+        fragments (list): Lista de fragmentos a añadir.
+
+    Returns:
+        str: Mensaje de confirmación o de error.
+    """
+    try:
+        if not os.path.exists(path_json):
+            data = {}
+        else:
+            with open(path_json, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+        if field_name_ref not in data:
+            data[field_name_ref] = []
+
+        for fragment in fragments:
+            data[field_name_ref].append({
+                "id": id_doc,
+                "fragment": fragment
+            })
+
+        with open(path_json, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
+        return f"Referencias añadidas correctamente al campo '{field_name_ref}' en {path_json}."
+    except Exception as e:
+        return f"Error al añadir referencias en el campo '{field_name_ref}' en {path_json}: {str(e)}"
 
 @tool
 def save_json_tool(carpeta_base: str, datos: Dict, nombre_archivo: str) -> str:
     """
-    Esta herramienta guarda un único diccionario como un archivo JSON en una carpeta especificada.
+    Guarda un diccionario como archivo JSON en una carpeta especificada.
+
+    Si el nombre del archivo no termina en '.json', se añade automáticamente.
 
     Args:
         carpeta_base (str): Ruta de la carpeta donde se guardará el archivo JSON.
         datos (Dict): Diccionario que representa los datos a guardar.
-        nombre_archivo (str): Nombre del archivo JSON (sin extensión .json).
+        nombre_archivo (str): Nombre del archivo JSON (con o sin extensión .json).
 
     Returns:
         str: Mensaje indicando si el archivo fue guardado correctamente o si ocurrió un error.
@@ -148,95 +219,79 @@ def save_json_tool(carpeta_base: str, datos: Dict, nombre_archivo: str) -> str:
         carpeta_base_abs = os.path.abspath(carpeta_base)
         os.makedirs(carpeta_base_abs, exist_ok=True)
 
-        archivo_json = f"{nombre_archivo}.json"
-        ruta_completa = os.path.join(carpeta_base_abs, archivo_json)
+        # Asegurarse de que nombre_archivo termina en '.json'
+        if not nombre_archivo.lower().endswith('.json'):
+            nombre_archivo += '.json'
+
+        ruta_completa = os.path.join(carpeta_base_abs, nombre_archivo)
 
         with open(ruta_completa, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=4, ensure_ascii=False)
 
-        return f"{archivo_json} guardado correctamente en {carpeta_base_abs}."
+        return f"{nombre_archivo} guardado correctamente en {carpeta_base_abs}."
     except Exception as e:
         return f"Error al guardar JSON: {str(e)}"
+
 
 @tool
 def get_organismo_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con el organismo convocante desde una base de datos vectorial.
+    Extrae información sobre el organismo que convoca la ayuda.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen información sobre el organismo convocante.
-    """
-
-    prompt = (
-        "Organismo convocante, entidad organizadora, institución que lanza la convocatoria, "
-        "administración responsable, ministerio, agencia pública, autoridad emisora de ayudas, "
-        "nombre del organismo público, nombre oficial del ente que convoca"
-    )
-
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
-
-@tool
-def get_nombre_convocatoria_context(vector_path: str) -> str:
-    """
-    Recupera fragmentos relacionados con el nombre de la convocatoria desde una base de datos vectorial.
-
-    Args:
-        vector_path (str): Ruta a la base de datos vectorial.
-
-    Returns:
-        str: Fragmentos relevantes que contienen información sobre el nombre de la convocatoria.
+        str: Fragmentos relevantes relacionados con el organismo convocante.
     """
     prompt = (
-        "Nombre de la convocatoria, título oficial de la convocatoria, denominación de la ayuda, "
-        "nombre del programa, título de la línea de ayudas, denominación completa del proyecto."
+        "Organismo convocante, entidad organizadora, administración responsable, "
+        "nombre de la institución o agencia pública que publica la convocatoria."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
 @tool
 def get_beneficiarios_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con "Beneficiarios" desde una base de datos vectorial.
-    
+    Identifica quiénes pueden solicitar la ayuda (beneficiarios).
+
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen información sobre "Beneficiarios".
+        str: Fragmentos relevantes relacionados con los beneficiarios de la convocatoria.
     """
-    prompt = "Empresas, entidades que pueden solicitar la ayuda, sujetos elegibles, destinatarios de la ayuda, tipo de solicitantes permitidos."
+    prompt = (
+        "Beneficiarios, entidades elegibles, tipo de solicitantes permitidos, destinatarios de la convocatoria."
+    )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
 @tool
 def get_presupuesto_minimo_context(vector_path: str) -> str:
     """
-    Recupera fragmentos sobre el presupuesto mínimo requerido para acceder a la convocatoria desde una base de datos vectorial.
+    Obtiene el presupuesto mínimo exigido para acceder a la ayuda.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen información sobre el presupuesto mínimo exigido por la convocatoria.
+        str: Fragmentos relevantes relacionados con el presupuesto mínimo exigido.
     """
     prompt = (
-        "Presupuesto mínimo exigido, cantidad mínima financiable, umbral mínimo de inversión para participar, "
-        "importe mínimo del proyecto."
+        "Presupuesto mínimo exigido, importe mínimo financiable, umbral mínimo de inversión para participar."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
-
 
 @tool
 def get_presupuesto_maximo_context(vector_path: str) -> str:
     """
-    Recupera fragmentos sobre el presupuesto máximo permitido por la convocatoria desde una base de datos vectorial.
+    Obtiene el presupuesto máximo permitido por la convocatoria.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen información sobre el presupuesto máximo permitido por la convocatoria.
+        str: Fragmentos relevantes relacionados con el presupuesto máximo permitido.
     """
     prompt = (
         "Presupuesto máximo permitido, importe tope del proyecto, cantidad máxima financiable, "
@@ -244,146 +299,134 @@ def get_presupuesto_maximo_context(vector_path: str) -> str:
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
-
 @tool
 def get_fecha_inicio_context(vector_path: str) -> str:
     """
-    Recupera fragmentos con la fecha de inicio de la convocatoria desde una base de datos vectorial.
+    Extrae la fecha de apertura del plazo de solicitud.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen la fecha de apertura de la convocatoria.
+        str: Fragmentos relevantes relacionados con la fecha de inicio del plazo de solicitud.
     """
     prompt = (
-        "Fecha de apertura, inicio del plazo de solicitud, comienzo del periodo de presentación, "
-        "fecha inicial de la convocatoria."
+        "Fecha de apertura, inicio del plazo de solicitud, fecha inicial de la convocatoria."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
-
 
 @tool
 def get_fecha_fin_context(vector_path: str) -> str:
     """
-    Recupera fragmentos con la fecha de fin de la convocatoria desde una base de datos vectorial.
+    Extrae la fecha de cierre del plazo de solicitud.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen la fecha de cierre de la convocatoria.
+        str: Fragmentos relevantes relacionados con la fecha de fin del plazo de solicitud.
     """
     prompt = (
-        "Fecha de cierre, fin del plazo de solicitud, término del periodo de presentación, "
-        "fecha final de la convocatoria."
+        "Fecha de cierre, fin del plazo de solicitud, término del periodo de presentación, fecha límite."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
 @tool
 def get_objetivos_convocatoria_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con los objetivos de la convocatoria desde una base de datos vectorial.
+    Recupera los objetivos o fines que persigue la convocatoria.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen información sobre los objetivos, fines o propósitos de la convocatoria.
+        str: Fragmentos relevantes relacionados con los objetivos de la convocatoria.
     """
     prompt = (
         "Objetivos de la convocatoria, propósito de la ayuda, finalidad del programa, "
-        "qué se busca lograr, metas de los proyectos financiados, qué tipo de actividades se quiere fomentar."
+        "metas de los proyectos financiados, actividades que se quieren fomentar."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
-
 
 @tool
 def get_anio_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con el año de publicación o vigencia de la convocatoria desde una base de datos vectorial.
+    Identifica el año de publicación o vigencia de la convocatoria.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que contienen información sobre el año en que se publica o está abierta la convocatoria.
+        str: Fragmentos relevantes relacionados con el año de publicación o vigencia.
     """
     prompt = (
         "Año de la convocatoria, ejercicio de publicación, año natural en el que se publica o abre la ayuda, "
-        "vigencia temporal de la convocatoria, fechas relevantes."
+        "vigencia temporal."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
-
 
 @tool
 def get_duracion_minima_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con la duración mínima permitida de los proyectos o ayudas desde una base de datos vectorial.
+    Obtiene la duración mínima que deben tener los proyectos subvencionados.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que especifican el tiempo mínimo que deben durar los proyectos financiados.
+        str: Fragmentos relevantes relacionados con la duración mínima permitida.
     """
     prompt = (
-        "Duración mínima, mínimo de meses o años del proyecto, duración mínima del proyecto, plazo mínimo del desarrollo, "
-        "tiempo mínimo de ejecución exigido."
+        "Duración mínima exigida, mínimo de meses o años del proyecto, plazo mínimo de ejecución."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
-
 
 @tool
 def get_duracion_maxima_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con la duración máxima permitida de los proyectos o ayudas desde una base de datos vectorial.
+    Obtiene la duración máxima permitida para los proyectos o ayudas.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que indican el tiempo máximo permitido para la ejecución de los proyectos.
+        str: Fragmentos relevantes relacionados con la duración máxima permitida.
     """
     prompt = (
-        "Duración máxima, máximo de meses o años del proyecto, duración límite del proyecto, "
-        "plazo tope de ejecución, restricciones de tiempo."
+        "Duración máxima permitida, máximo de meses o años del proyecto, plazo límite de ejecución."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
-
 
 @tool
 def get_tipo_financiacion_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con el tipo de financiación o ayuda ofrecida por la convocatoria desde una base de datos vectorial.
+    Determina el tipo de financiación ofrecida (subvención, préstamo, etc.).
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que describen si se trata de subvención, préstamo, ayuda reembolsable, etc.
+        str: Fragmentos relevantes relacionados con el tipo de financiación ofrecida.
     """
     prompt = (
-        "Tipo de financiación, tipo de ayuda, modalidad de apoyo económico, subvención, préstamo, ayuda reembolsable, "
-        "esquema de financiación propuesto."
+        "Tipo de financiación, modalidad de ayuda, subvención, préstamo, ayuda reembolsable, esquema de apoyo financiero."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
 @tool
 def get_forma_plazo_cobro_context(vector_path: str) -> str:
     """
-    Recupera fragmentos relacionados con la forma y los plazos en los que se cobra la ayuda desde una base de datos vectorial.
+    Recupera la forma de pago y el calendario de cobro de la ayuda.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
 
     Returns:
-        str: Fragmentos relevantes que explican cómo y cuándo se realiza el pago de la ayuda o financiación.
+        str: Fragmentos relevantes relacionados con la forma y plazos de cobro de la ayuda.
     """
     prompt = (
         "Forma y plazo de cobro, calendario de pagos, modo de desembolso de la ayuda, "
-        "momentos en que se recibe la financiación, en qué tramos se entrega el dinero, "
-        "cuándo se cobra, distribución temporal del pago."
+        "cuándo se recibe el dinero, en qué tramos o momentos se entrega la financiación."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
@@ -418,9 +461,10 @@ def get_region_aplicacion_context(vector_path: str) -> str:
         str: Fragmentos relevantes que mencionan zonas geográficas, comunidades autónomas o territorios donde es aplicable la ayuda.
     """
     prompt = (
-        "Región de aplicación, ámbito territorial de la convocatoria, comunidad autónoma donde aplica la ayuda, "
-        "zona geográfica beneficiaria, localización del proyecto, regiones cubiertas por la convocatoria."
+    "¿En qué regiones, comunidades autónomas o zonas geográficas aplica esta convocatoria? "
+    "Busca cualquier referencia a territorio beneficiario, ubicación del proyecto o ámbito territorial de la ayuda."
     )
+
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
 @tool
@@ -439,12 +483,11 @@ def get_intensidad_subvencion_context(vector_path: str) -> str:
         str: Fragmentos relevantes que incluyen tablas, porcentajes u otras estructuras que describan la parte no reembolsable de la ayuda.
     """
     prompt = (
-        "intensidad de la subvención, tramo no reembolsable, tabla de porcentajes, ayuda a fondo perdido, "
-        "porcentaje subvencionable, variación por tipo de empresa (pequeña, mediana, grande), "
-        "porcentaje no reembolsable según región, condiciones específicas, categoría empresarial, "
-        "coste elegible subvencionado, tabla de ayudas, desglose por tipo de beneficiario o actividad, "
-        "máximo porcentaje de subvención, intensidad según zona geográfica, condiciones de cofinanciación"
+    "¿Cuál es el porcentaje de subvención o ayuda a fondo perdido que ofrece la convocatoria? "
+    "Busca datos que indiquen intensidades máximas de ayuda según tipo de empresa, región o categoría de beneficiario, "
+    "especialmente en forma de tablas o porcentajes."
     )
+
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
 @tool
@@ -463,11 +506,11 @@ def get_intensidad_prestamo_context(vector_path: str) -> str:
         str: Fragmentos relevantes que incluyen información estructurada (como tablas o porcentajes) sobre las condiciones de devolución del préstamo.
     """
     prompt = (
-        "intensidad del préstamo, tramo reembolsable, porcentaje a devolver, condiciones del préstamo, "
-        "ayuda parcialmente reembolsable, tabla de condiciones financieras, interés aplicable, tipo de interés, "
-        "duración del préstamo, condiciones de reembolso según tamaño de empresa o región, desglose por categoría, "
-        "plazo de amortización, condiciones del tramo reembolsable, préstamo bonificado, devolución del apoyo financiero"
+    "¿Qué condiciones de préstamo o tramo reembolsable establece la convocatoria? "
+    "Busca fragmentos que describan porcentaje a devolver, interés aplicado, plazos de amortización o condiciones de reembolso, "
+    "especialmente si aparecen tablas o desgloses por tipo de beneficiario."
     )
+
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
 @tool
@@ -486,10 +529,8 @@ def get_tipo_consorcio_context(vector_path: str) -> str:
         str: Fragmentos relevantes que mencionan requisitos de consorcio, colaboración entre entidades o características del grupo participante.
     """
     prompt = (
-        "tipo de consorcio, consorcio obligatorio, participación en agrupación, entidades colaboradoras, "
-        "colaboración entre empresas y centros de investigación, consorcio internacional, mínimo de participantes, "
-        "proyecto colaborativo, cooperación interregional, requisitos de colaboración, estructura del consorcio, "
-        "condiciones de agrupación de entidades, características del consorcio, entidades asociadas"
+    "¿Es obligatorio formar un consorcio para participar en esta convocatoria? "
+    "Busca información sobre tipos de consorcio permitidos, número mínimo de participantes o características de la colaboración entre entidades."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)
 
@@ -509,9 +550,7 @@ def get_costes_elegibles_context(vector_path: str) -> str:
         str: Fragmentos relevantes que mencionan categorías de gasto financiables o condiciones de elegibilidad del presupuesto.
     """
     prompt = (
-        "costes elegibles, gastos subvencionables, tipos de gasto cubiertos, gastos admitidos, "
-        "costes financiables, gastos de personal, subcontratación, costes directos, costes indirectos, "
-        "viajes, materiales, equipamiento, partidas aceptadas, presupuesto elegible, conceptos financiables, "
-        "limitaciones por categoría de gasto"
+    "¿Qué tipos de costes son elegibles o financiables en esta convocatoria? "
+    "Busca descripciones de gastos subvencionables, como personal, equipamiento, subcontrataciones, viajes, materiales u otros conceptos aceptados."
     )
     return search_from_context_vec_db(prompt, vectorstore_path=vector_path)

@@ -41,10 +41,6 @@ mock_ayudas_ref = [
             { "id": "id1_ficha", "fragment": 4 },
             { "id": "id1_base", "fragment": 7 }
         ]),
-        "nombre_ref": json.dumps([
-            { "id": "id1_ficha", "fragment": 6 },
-            { "id": "id1_base", "fragment": 3 }
-        ]),
         "fecha_inicio_ref": json.dumps([
             { "id": "id1_ficha", "fragment": 5 },
             { "id": "id1_base", "fragment": 8 }

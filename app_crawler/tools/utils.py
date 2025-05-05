@@ -5,17 +5,24 @@ import tempfile
 import requests
 
 
+import os
+
 def getIdFromFile(file_path: str) -> str:
     """
-    Extrae el nombre del archivo sin extensión ni ruta.
-
+    Extrae el nombre del archivo sin extensión (quitando repeticiones de extensiones comunes como .json, .txt, etc.).
+    
     Args:
         file_path (str): Ruta completa o nombre del archivo.
 
     Returns:
-        str: Nombre del archivo sin extensión.
+        str: Nombre del archivo sin extensiones.
     """
-    return os.path.splitext(os.path.basename(file_path))[0]
+    filename = os.path.basename(file_path)
+
+    while filename.endswith('.json') or filename.endswith('.txt') or filename.endswith('.pdf'):
+        filename = filename.rsplit('.', 1)[0]
+    
+    return filename
 
 def getVectorialIdFromFile(file_path: str) -> str:
     """
@@ -47,18 +54,17 @@ def getVectorialIdFromFile(file_path: str) -> str:
 
 import os
 
-def listJSONs():
-    """
-    Busca todos los archivos JSON en el directorio 'data/json' y sus subdirectorios
+def listJSONs(path: str):
+    f"""
+    Busca todos los archivos JSON en el directorio {path} y sus subdirectorios
     (excepto 'refined') y devuelve una lista con las rutas completas de cada uno.
 
     Returns:
-        list[str]: Una lista de rutas completas a los archivos .json encontrados en 'data/json' y sus subdirectorios.
+        list[str]: Una lista de rutas completas a los archivos .json encontrados en {path} y sus subdirectorios.
     """
-    ruta = 'data/json'
     jsons = []
 
-    for root, dirs, files in os.walk(ruta):
+    for root, dirs, files in os.walk(path):
         if 'refined' in dirs:
             dirs.remove('refined')
 
@@ -72,19 +78,43 @@ def listJSONs():
     return jsons
 
 import os
+import shutil
+
+def create_json_templates(jsons: list[str], base_path: str):
+    """
+    Crea copias de los JSONs en una carpeta 'refined' dentro de base_path.
+
+    Args:
+        jsons (list[str]): Lista de rutas de archivos JSON a copiar.
+        base_path (str): Ruta base donde crear la carpeta 'refined'.
+
+    Returns:
+        None
+    """
+    refined_folder = os.path.join(base_path, "refined")
+    os.makedirs(refined_folder, exist_ok=True)
+
+    for json_path in jsons:
+        if os.path.exists(json_path):
+            filename = os.path.basename(json_path)
+            destination = os.path.join(refined_folder, filename)
+            shutil.copy(json_path, destination)
+        else:
+            print(f"Advertencia: El archivo {json_path} no existe y no se ha copiado.")
+
+import os
 import json
 import shutil
 import tempfile
 from playwright.sync_api import sync_playwright
 
-def downloadPDFs(json_file_paths):
+def downloadPDFs(json_file_paths, pdf_dest_path):
     """
     Descarga PDFs desde 'Link ficha técnica' y 'Link orden de bases' en cada JSON.
     Crea una carpeta por ID y guarda los PDFs como <id>_ficha.pdf y <id>_bases.pdf.
     Si ya existen, no se vuelven a descargar.
     """
-    destino = 'data/pdf'
-    os.makedirs(destino, exist_ok=True)
+    os.makedirs(pdf_dest_path, exist_ok=True)
 
     for json_path in json_file_paths:
         try:
@@ -92,7 +122,7 @@ def downloadPDFs(json_file_paths):
                 contenido = json.load(f)
 
             id_convocatoria = getVectorialIdFromFile(json_path)
-            carpeta_id = os.path.join(destino, id_convocatoria)
+            carpeta_id = os.path.join(pdf_dest_path, id_convocatoria)
             os.makedirs(carpeta_id, exist_ok=True)
 
             # --- Descarga ficha técnica ---
@@ -195,14 +225,14 @@ def validate_convocatoria_json(json_path):
 
         for field in required_fields:
             if field not in data:
-                print(f"❌ Campo faltante: '{field}' en {json_path}")
+                print(f"Campo faltante: '{field}' en {json_path}")
                 os.remove(json_path)
                 return False
 
         return True
 
     except Exception as e:
-        print(f"⚠️ Error al procesar {json_path}: {e}")
+        print(f"Error al procesar {json_path}: {e}")
         return False
 
 
@@ -245,25 +275,19 @@ def add_missing_keys_to_json(json_file_path):
 
 def load_refined_urls(path: str) -> list:
     """
-    Carga todas las URLs de los archivos '_verifyed.txt' en la carpeta indicada.
+    Carga todas las URLs del archivo de texto proporcionado.
     
     Args:
-    - carpeta (str): La ruta donde se encuentran los archivos '_verifyed.txt'.
+    - path (str): La ruta completa del archivo .txt.
     
     Returns:
-    - list: Una lista con todas las URLs encontradas en el archivo '_verifyed.txt'.
+    - list: Una lista con todas las URLs encontradas en el archivo.
     """
-    archivo_refinado = None
-    for archivo in os.listdir(path):
-        if archivo.endswith('_verifyed.txt'):
-            archivo_refinado = os.path.join(path, archivo)
-            break
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"El archivo '{path}' no existe.")
 
-    if archivo_refinado is None:
-        raise FileNotFoundError("No se encontró ningún archivo que termine en '_verifyed.txt' en la carpeta.")
-
-    links = []
-    with open(archivo_refinado, 'r', encoding='utf-8') as file:
+    with open(path, 'r', encoding='utf-8') as file:
         links = [line.strip() for line in file if line.strip()]  # Filtra las líneas vacías
 
     return links
+

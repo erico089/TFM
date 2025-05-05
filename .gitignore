@@ -5,3 +5,4 @@ __pycache__/
 db/
 data - copia/
 db_test/
+data_crawl_test/
