@@ -29,56 +29,56 @@ class CrawlingManager:
 
     
     def run(self):
-        # # Paso 1: Obtener los resultados del agente de navegación
-        # links = load_refined_urls(self.urls_path) 
+        # Paso 1: Obtener los resultados del agente de navegación
+        links = load_refined_urls(self.urls_path) 
 
-        # if not links:
-        #     print("No se encontraron enlaces de convocatorias.")
-        #     return
+        if not links:
+            print("No se encontraron enlaces de convocatorias.")
+            return
 
-        # # Paso 2: Crawling concurrente
-        # for url in links:
-        #     while True:
-        #         current_id = str(uuid.uuid4())
-        #         print(f"Procesando URL {url} con ID {current_id}")
+        # Paso 2: Crawling concurrente
+        for url in links:
+            while True:
+                current_id = str(uuid.uuid4())
+                print(f"Procesando URL {url} con ID {current_id}")
 
-        #         crawl_convocatoria(url, current_id, self.json_folder_base)
+                crawl_convocatoria(url, current_id, self.json_folder_base)
 
-        #         json_folder = f"{self.json_folder_base}/convo_{current_id}"
+                json_folder = f"{self.json_folder_base}/convo_{current_id}"
 
-        #         if not os.path.exists(json_folder):
-        #             print(f"No se encontró la carpeta {json_folder}, pasando a la siguiente URL.")
-        #             break
+                if not os.path.exists(json_folder):
+                    print(f"No se encontró la carpeta {json_folder}, pasando a la siguiente URL.")
+                    break
 
-        #         all_valid = True
-        #         for filename in os.listdir(json_folder):
-        #             if filename.endswith(".json"):
-        #                 json_path = os.path.join(json_folder, filename)
+                all_valid = True
+                for filename in os.listdir(json_folder):
+                    if filename.endswith(".json"):
+                        json_path = os.path.join(json_folder, filename)
 
-        #                 if not validate_convocatoria_json(json_path):
-        #                     all_valid = False
+                        if not validate_convocatoria_json(json_path):
+                            all_valid = False
 
-        #         if all_valid:
-        #             print(f"Todos los archivos JSON para {url} están validados correctamente.")
-        #             break
-        #         else:
-        #             print(f"Regenerando JSON para {url} (ID anterior: {current_id})...")
+                if all_valid:
+                    print(f"Todos los archivos JSON para {url} están validados correctamente.")
+                    break
+                else:
+                    print(f"Regenerando JSON para {url} (ID anterior: {current_id})...")
         
-        # # Descargar los PDFs
-        # json_results = listJSONs(self.json_folder_base)
-        # for json_file in json_results:
-        #     add_missing_keys_to_json(json_file)
-        # downloadPDFs(json_results, self.pdf_folder_base)
-        # create_json_templates(json_results, self.json_folder_base)
+        # Descargar los PDFs
+        json_results = listJSONs(self.json_folder_base)
+        for json_file in json_results:
+            add_missing_keys_to_json(json_file)
+        downloadPDFs(json_results, self.pdf_folder_base)
+        create_json_templates(json_results, self.json_folder_base)
 
-        # # Refinamiento temporal de los PDFs
-        # process_temp_pdfs_batch(self.pdf_folder_base, self.db_vec_temp_dir)
+        # Refinamiento temporal de los PDFs
+        process_temp_pdfs_batch(self.pdf_folder_base, self.db_vec_temp_dir)
 
-        # # Paso 3: Refinamiento concurrente
-        # for result in json_results:
-        #     json_name = os.path.splitext(os.path.basename(result))[0]
-        #     vector_db_path = f"{self.db_vec_temp_dir}/{getVectorialIdFromFile(json_name)}"
-        #     run_refinement_agent(result, vector_db_path, self.json_folder_base)
+        # Paso 3: Refinamiento concurrente
+        for result in json_results:
+            json_name = os.path.splitext(os.path.basename(result))[0]
+            vector_db_path = f"{self.db_vec_temp_dir}/{getVectorialIdFromFile(json_name)}"
+            run_refinement_agent(result, vector_db_path, self.json_folder_base)
 
         fix_minimis_in_jsons(f"{self.json_folder_base}/refined")
 
