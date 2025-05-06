@@ -2,7 +2,6 @@ import logging
 import sys
 import contextlib
 
-# --- Configuración del logger ---
 logger = logging.getLogger("agent_logger")
 logger.setLevel(logging.DEBUG)
 

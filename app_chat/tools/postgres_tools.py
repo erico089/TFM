@@ -16,10 +16,6 @@ def get_record_by_id(id: int) -> tuple:
         tuple: Tupla con los valores de las columnas del registro encontrado, o None si no existe.
     """
 
-    from dotenv import load_dotenv
-    import os
-    import psycopg2
-
     load_dotenv()
     DB_CONFIG = {
         "dbname": "ayudas",
@@ -59,9 +55,6 @@ def get_record_by_id_vectorial(id_vectorial: int) -> tuple:
     Returns:
         tuple: Tupla con los valores de las columnas del registro encontrado, o None si no existe.
     """
-    from dotenv import load_dotenv
-    import os
-    import psycopg2
 
     load_dotenv()
     DB_CONFIG = {
@@ -106,9 +99,6 @@ def run_query(query: str, params: tuple = None) -> list:
         list: Una lista de tuplas que representa las filas devueltas por la consulta.
               Si la consulta no es un SELECT o si falla, se devuelve una lista vacía.
     """
-    from dotenv import load_dotenv
-    import os
-    import psycopg2
 
     load_dotenv()
     DB_CONFIG = {
@@ -161,9 +151,6 @@ def extract_from_id_if_present(id: int) -> list:
     Returns:
         list: Lista con los valores de las columnas del registro encontrado, o una lista vacía si no existe.
     """
-    from dotenv import load_dotenv
-    import os
-    import psycopg2
 
     load_dotenv()
     DB_CONFIG = {

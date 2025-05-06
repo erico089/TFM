@@ -1,4 +1,3 @@
-# main.py
 import asyncio
 from managers.navigation_manager import NavigationManager
 

@@ -2,6 +2,9 @@ from smolagents import tool
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import os
 
 @tool
 def get_context(prompt: str) -> list:
@@ -109,13 +112,6 @@ def get_context_by_id_and_fragment(prompt: str, doc_id: str, fragment_id: int) -
         }
     )
 
-
-from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
-import os
-
 local_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
@@ -164,7 +160,7 @@ def save_pdf_at_vec_db(
 
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-    print(f"💾 Guardando en la base vectorial en: {vectorstore_path}")
+    print(f"Guardando en la base vectorial en: {vectorstore_path}")
     db = Chroma.from_documents(
         documents=all_chunks,
         embedding=embedding_model,

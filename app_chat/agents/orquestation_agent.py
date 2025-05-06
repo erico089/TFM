@@ -1,7 +1,6 @@
-from smolagents import CodeAgent, tool, DuckDuckGoSearchTool
+from smolagents import CodeAgent, DuckDuckGoSearchTool
 from dotenv import load_dotenv
 import os
-import psycopg2
 from azureOpenAIServerModel import AzureOpenAIServerModel
 from agents.vectorial_agent import ask_vectorial_agent
 from agents.postgres_agent import ask_postgres_agent

@@ -26,7 +26,6 @@ def setup_database():
     )
     cursor = connection.cursor()
 
-   # Crear tablas si no existen
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS ayudas_mock (
         minimis TEXT,

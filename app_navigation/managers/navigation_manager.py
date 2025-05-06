@@ -1,10 +1,6 @@
-# navigation_manager.py
-
 from agents.navigation_agent import navigate_convocatoria, verify_convocatoria
-import asyncio
 from playwright.async_api import async_playwright
 import os
-
 
 class NavigationManager:
     def __init__(self):
@@ -19,13 +15,6 @@ class NavigationManager:
 
         await navigate_convocatoria(url, instructions)
 
-    # navigation_manager.py
-
-import os
-import asyncio
-from playwright.async_api import async_playwright
-
-from agents.navigation_agent import navigate_convocatoria
 
 class NavigationManager:
     def __init__(self):
@@ -70,7 +59,6 @@ class NavigationManager:
 
             await browser.close()
 
-        # Guardar el resultado
         base, ext = os.path.splitext(urls_file_path)
         refined_file_path = f"{base}_refined{ext}"
 

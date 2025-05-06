@@ -1,6 +1,4 @@
-# mock_data.py
 import json
-# mock_data.py
 
 mock_ayudas = [
     {

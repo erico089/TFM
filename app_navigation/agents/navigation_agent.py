@@ -1,6 +1,4 @@
 import os
-import sys
-import asyncio
 from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 from browser_use.agent.service import Agent, Controller, Browser
@@ -27,7 +25,6 @@ os.makedirs(output_dir, exist_ok=True)
 controller = Controller()
 registry = controller.registry
 
-# Definimos la acción para guardar las URLs en un fichero
 @registry.action(description="Guardar lista de URLs en un archivo", domains=["*"])
 async def save_urls_to_file(urls: list):
     """
@@ -180,7 +177,7 @@ async def verify_convocatoria(url: str):
         controller=controller,
     )
 
-    await agent.run(max_steps=25)  # Aumento el máximo un poco por si navega mucho en índice
+    await agent.run(max_steps=25)
     await browser.close()
 
     print(f"Agent finished processing URL: {url}")

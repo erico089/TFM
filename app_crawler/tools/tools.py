@@ -7,7 +7,7 @@ from selenium import webdriver
 from pypdf import PdfReader
 from tools.vectorial_db_tools import search_from_context_vec_db
 from urllib.parse import urlparse
-
+from typing import Dict
 
 @tool
 def leer_json(file_path: str) -> dict:
@@ -46,8 +46,6 @@ def leer_pdf(file_path: str) -> str:
     for page in reader.pages[:3]:
         contenido += page.extract_text()
     return contenido
-
-from urllib.parse import urljoin
 
 def simplificar_html(html: str, base_url: str) -> str:
     """
@@ -90,8 +88,6 @@ def simplificar_html(html: str, base_url: str) -> str:
 
     return texto_procesado
 
-
-
 @tool
 def fetch_html_tool(url: str) -> str:
     """
@@ -122,11 +118,6 @@ def fetch_html_tool(url: str) -> str:
         return simplificar_html(html,base_url)
     except Exception as e:
         return f"Error al obtener HTML con Selenium: {str(e)}"
-
-
-import os
-import json
-from typing import Dict
 
 @tool
 def save_json_field_tool(path_json: str, field_name: str, value: str) -> str:
@@ -219,7 +210,6 @@ def save_json_tool(carpeta_base: str, datos: Dict, nombre_archivo: str) -> str:
         carpeta_base_abs = os.path.abspath(carpeta_base)
         os.makedirs(carpeta_base_abs, exist_ok=True)
 
-        # Asegurarse de que nombre_archivo termina en '.json'
         if not nombre_archivo.lower().endswith('.json'):
             nombre_archivo += '.json'
 

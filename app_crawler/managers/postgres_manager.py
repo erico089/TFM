@@ -4,9 +4,6 @@ from dotenv import load_dotenv
 import os
 from tools.utils import getIdFromFile, getVectorialIdFromFile
 
-from dotenv import load_dotenv
-import os
-
 load_dotenv()
 
 DB_CONFIG = {
@@ -64,7 +61,7 @@ def insert_into_ayudas(path_json, conn):
 
     for field in required_fields:
             if field not in item:
-                print(f"⚠️ Campo faltante '{field}' en {path_json}. Abortando inserción.")
+                print(f"Campo faltante '{field}' en {path_json}. Abortando inserción.")
                 cur.close()
                 return
             
@@ -244,5 +241,5 @@ def insert_into_ayudas_ref(path_json, conn):
     conn.commit()
     cur.close()
 
-    print(f"✅ Insertado correctamente (ref): {path_json}")
+    print(f"Insertado correctamente (ref): {path_json}")
 

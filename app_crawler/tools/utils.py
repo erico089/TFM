@@ -1,11 +1,7 @@
 import os
 import json
 import shutil
-import tempfile
 import requests
-
-
-import os
 
 def getIdFromFile(file_path: str) -> str:
     """
@@ -52,8 +48,6 @@ def getVectorialIdFromFile(file_path: str) -> str:
         return partes[1] 
 
 
-import os
-
 def listJSONs(path: str):
     f"""
     Busca todos los archivos JSON en el directorio {path} y sus subdirectorios
@@ -77,9 +71,6 @@ def listJSONs(path: str):
 
     return jsons
 
-import os
-import shutil
-
 def create_json_templates(jsons: list[str], base_path: str):
     """
     Crea copias de los JSONs en una carpeta 'refined' dentro de base_path.
@@ -102,12 +93,6 @@ def create_json_templates(jsons: list[str], base_path: str):
         else:
             print(f"Advertencia: El archivo {json_path} no existe y no se ha copiado.")
 
-import os
-import json
-import shutil
-import tempfile
-from playwright.sync_api import sync_playwright
-
 def downloadPDFs(json_file_paths, pdf_dest_path):
     """
     Descarga PDFs desde 'Link ficha técnica' y 'Link orden de bases' en cada JSON.
@@ -125,36 +110,34 @@ def downloadPDFs(json_file_paths, pdf_dest_path):
             carpeta_id = os.path.join(pdf_dest_path, id_convocatoria)
             os.makedirs(carpeta_id, exist_ok=True)
 
-            # --- Descarga ficha técnica ---
             ficha_url = contenido.get('Link ficha técnica')
             if ficha_url and ficha_url.endswith('.pdf'):
                 nombre_ficha = f"{id_convocatoria}_ficha.pdf"
                 ruta_ficha = os.path.join(carpeta_id, nombre_ficha)
 
                 if not os.path.exists(ruta_ficha):
-                    print(f"🟡 Descargando ficha técnica desde: {ficha_url}")
+                    print(f"Descargando ficha técnica desde: {ficha_url}")
                     descargar_pdf(ficha_url, ruta_ficha)
                 else:
-                    print(f"🟢 Ficha técnica ya existe: {nombre_ficha}")
+                    print(f"Ficha técnica ya existe: {nombre_ficha}")
             else:
-                print(f"ℹ️ No hay ficha técnica válida en: {json_path}")
+                print(f"No hay ficha técnica válida en: {json_path}")
 
-            # --- Descarga orden de bases (opcional) ---
             bases_url = contenido.get('Link orden de bases')
             if bases_url and bases_url.endswith('.pdf'):
                 nombre_bases = f"{id_convocatoria}_bases.pdf"
                 ruta_bases = os.path.join(carpeta_id, nombre_bases)
 
                 if not os.path.exists(ruta_bases):
-                    print(f"🟡 Descargando orden de bases desde: {bases_url}")
+                    print(f"Descargando orden de bases desde: {bases_url}")
                     descargar_pdf(bases_url, ruta_bases)
                 else:
-                    print(f"🟢 Orden de bases ya existe: {nombre_bases}")
+                    print(f"Orden de bases ya existe: {nombre_bases}")
             else:
-                print(f"ℹ️ No hay orden de bases válida en: {json_path}")
+                print(f"No hay orden de bases válida en: {json_path}")
 
         except Exception as e:
-            print(f"❌ Error procesando {json_path}: {e}")
+            print(f"Error procesando {json_path}: {e}")
 
 def descargar_pdf(url, ruta_destino):
     """Descarga un PDF usando requests con reintentos."""
@@ -178,9 +161,9 @@ def descargar_pdf(url, ruta_destino):
                 raise Exception(f"Respuesta inesperada. Status: {response.status_code}, Content-Type: {response.headers.get('Content-Type')}")
         except Exception as e:
             intentos += 1
-            print(f"⚠️ Error al descargar {url} (intento {intentos}/3): {e}")
+            print(f"Error al descargar {url} (intento {intentos}/3): {e}")
             if intentos >= 3:
-                print(f"❌ Fallo definitivo al descargar {url}. Se omite este archivo.")
+                print(f"Fallo definitivo al descargar {url}. Se omite este archivo.")
 
 
 def validate_convocatoria_json(json_path):
@@ -218,7 +201,6 @@ def validate_convocatoria_json(json_path):
         "Link orden de bases"
     ]
 
-
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -253,17 +235,14 @@ def add_missing_keys_to_json(json_file_path):
         None
     """
     try:
-        # Cargar el JSON desde el archivo
         with open(json_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        # Añadir las nuevas claves con valores vacíos
         data['Intensidad de la subvención'] = ''
         data['Intensidad del préstamo'] = ''
         data['Tipo de consorcio'] = ''
         data['Costes elegibles'] = ''
 
-        # Guardar el archivo modificado
         with open(json_file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
         
@@ -287,7 +266,7 @@ def load_refined_urls(path: str) -> list:
         raise FileNotFoundError(f"El archivo '{path}' no existe.")
 
     with open(path, 'r', encoding='utf-8') as file:
-        links = [line.strip() for line in file if line.strip()]  # Filtra las líneas vacías
+        links = [line.strip() for line in file if line.strip()]
 
     return links
 

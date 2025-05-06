@@ -10,7 +10,6 @@ def setup_crawling_manager():
     txt_content = """https://www.cdti.es/ayudas/programa-tecnologico-espacial-pte
 https://www.cdti.es/ayudas/proyectos-de-i-d
 https://www.cdti.es/ayudas/innterconecta-step"""
-    # txt_content = """https://www.cdti.es/ayudas/proyectos-de-i-d"""
 
     base_path = 'data_crawl_test'
     nav_urls_path = os.path.join(base_path, 'nav_urls')
@@ -43,7 +42,7 @@ https://www.cdti.es/ayudas/innterconecta-step"""
         insert=False
     )
 
-    # manager.run()
+    manager.run()
     return manager
 
 
@@ -92,7 +91,6 @@ def test_json_data_quality_and_extraction(setup_crawling_manager, capsys):
 
         json_extraidos.append(datos.copy())
 
-    # --- FASE 1: Verificar número de matches ---
     total_matches = 0
     convs_to_evaluate = []
 
@@ -112,10 +110,9 @@ def test_json_data_quality_and_extraction(setup_crawling_manager, capsys):
 
     assert total_matches == 3, f"Se esperaban 3 matches, pero se encontraron {total_matches}."
 
-    # --- FASE 2: Comparar campos uno a uno ---
     aciertos = 0
     fallos = 0
-    fallos_list = []  # <-- Lista para guardar detalles de fallos
+    fallos_list = []
     agent = TestAgent()
 
     for pair in convs_to_evaluate:
@@ -131,10 +128,8 @@ def test_json_data_quality_and_extraction(setup_crawling_manager, capsys):
                 fallos += 1
                 fallos_list.append((campo, expected_value, real_value))
 
-    # --- FASE 3: Resumen final ---
     print(f"\nResumen: {aciertos} campos correctos, {fallos} campos incorrectos.")
 
-    # Si hubo fallos, printar los detalles
     if fallos_list:
         print("\nDetalles de los fallos encontrados:")
         for fallo in fallos_list:
@@ -142,9 +137,8 @@ def test_json_data_quality_and_extraction(setup_crawling_manager, capsys):
 
     assert fallos == 0, f"Hay {fallos} fallos en la validación de campos."
 
-    # Capturar salida
     captured = capsys.readouterr()
     print("Salida capturada:")
-    print(captured.out)  # Muestra lo que fue impreso en el test
+    print(captured.out)
 
 
