@@ -1,6 +1,7 @@
 from agents.navigation_agent import navigate_convocatoria, verify_convocatoria
 from playwright.async_api import async_playwright
 import os
+import asyncio
 
 class NavigationManager:
     def __init__(self):
@@ -88,10 +89,13 @@ class NavigationManager:
             print("No se encontraron URLs en el archivo.")
             return
 
+        tasks = []
         for url in urls:
             print(f"Procesando URL: {url}")
-            try:
-                await verify_convocatoria(url)
-            except Exception as e:
-                print(f"Error procesando {url}: {str(e)}")
+            tasks.append(verify_convocatoria(url))
 
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for url, result in zip(urls, results):
+            if isinstance(result, Exception):
+                print(f"Error procesando {url}: {result}")
