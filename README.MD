@@ -211,6 +211,7 @@ Así, cada aplicación funcionará de manera independiente, pero el proceso es e
 
 - **AppCrawling** y **AppNavegacion**:  
   Simplemente ejecuta la aplicación y espera a que termine, ya que son aplicaciones de un solo uso.
+  Aun asi, puedes modificar la app de navegación con un nuevo instruct.txt y una nueva URL base para testear el proceso en una web de convocatorias distinta.
 
 - **AppChat**:  
   Ejecuta la aplicación y, directamente en la consola donde se haya ejecutado, podrás interactuar con el chat, conversando con el agente.
