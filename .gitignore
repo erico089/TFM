@@ -6,3 +6,4 @@ db/
 data - copia/
 db_test/
 data_crawl_test/
+agent_output.log
