@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 import requests
+import concurrent.futures
 
 def getIdFromFile(file_path: str) -> str:
     """
@@ -71,7 +72,7 @@ def listJSONs(path: str):
 
     return jsons
 
-def create_json_templates(jsons: list[str], base_path: str):
+def create_json_templates(jsons: list[str], base_path: str, max_workers=10):
     """
     Crea copias de los JSONs en una carpeta 'refined' dentro de base_path.
 
@@ -85,7 +86,7 @@ def create_json_templates(jsons: list[str], base_path: str):
     refined_folder = os.path.join(base_path, "refined")
     os.makedirs(refined_folder, exist_ok=True)
 
-    for json_path in jsons:
+    def copy_single_json(json_path):
         if os.path.exists(json_path):
             filename = os.path.basename(json_path)
             destination = os.path.join(refined_folder, filename)
@@ -93,7 +94,11 @@ def create_json_templates(jsons: list[str], base_path: str):
         else:
             print(f"Advertencia: El archivo {json_path} no existe y no se ha copiado.")
 
-def downloadPDFs(json_file_paths, pdf_dest_path):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        executor.map(copy_single_json, jsons)
+
+
+def downloadPDFs(json_file_paths, pdf_dest_path, max_workers=10):
     """
     Descarga PDFs desde 'Link ficha técnica' y 'Link orden de bases' en cada JSON.
     Crea una carpeta por ID y guarda los PDFs como <id>_ficha.pdf y <id>_bases.pdf.
@@ -101,7 +106,7 @@ def downloadPDFs(json_file_paths, pdf_dest_path):
     """
     os.makedirs(pdf_dest_path, exist_ok=True)
 
-    for json_path in json_file_paths:
+    def process_single_json(json_path):
         try:
             with open(json_path, 'r', encoding='utf-8') as f:
                 contenido = json.load(f)
@@ -138,6 +143,10 @@ def downloadPDFs(json_file_paths, pdf_dest_path):
 
         except Exception as e:
             print(f"Error procesando {json_path}: {e}")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        executor.map(process_single_json, json_file_paths)
+
 
 def descargar_pdf(url, ruta_destino):
     """Descarga un PDF usando requests con reintentos."""

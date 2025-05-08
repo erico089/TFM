@@ -4,11 +4,18 @@ from langchain_community.vectorstores import Chroma
 import os
 import pdfplumber
 from langchain_community.docstore.document import Document
+from azure.core.credentials import AzureKeyCredential
+from openai import AzureOpenAI
+from dotenv import load_dotenv
+from langchain_openai import AzureOpenAIEmbeddings
+import time
+from tqdm import tqdm  
 
-local_model = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
-
+load_dotenv()
+api_key = os.environ["AZURE_EMBEDDING_KEY"]
+deployment_name = os.environ["AZURE_EMBEDDING_DEPLOYMENT_NAME"]
+api_base = os.environ["AZURE_EMBEDDING_ENDPOINT"] 
+api_version = os.environ["AZURE_EMBEDDING_API_VERSION"] 
 
 def extract_text_and_tables(pdf_path):
     """
@@ -35,10 +42,14 @@ def save_pdf_at_vec_db(
     pdf_paths: list,
     vectorstore_path: str,
     chunk_size: int = 500,
-    chunk_overlap: int = 100
+    chunk_overlap: int = 100,
+    batch_size: int = 50, 
+    max_retries: int = 5,  
+    retry_delay: int = 10 
 ):
     """
-    Procesa una lista de PDFs y guarda sus embeddings en una base de datos vectorial Chroma.
+    Procesa una lista de PDFs y guarda sus embeddings en una base de datos vectorial Chroma,
+    manejando automáticamente limitaciones de tasa de Azure OpenAI.
     """
     if not pdf_paths:
         raise ValueError("La lista de pdf_paths está vacía.")
@@ -62,39 +73,72 @@ def save_pdf_at_vec_db(
             tipo = chunk["tipo"]
             content = chunk["content"]
 
-            split_docs = splitter.split_text(content)
-
-            for sub_idx, sub_content in enumerate(split_docs):
+            if tipo == 'tabla':
                 doc = Document(
-                    page_content=sub_content,
+                    page_content=content,
                     metadata={
                         "id": file_name,
-                        "fragment": f"{idx+1}-{sub_idx+1}",
+                        "fragment": f"{idx+1}",
                         "tipo": tipo
                     }
                 )
                 all_documents.append(doc)
+            else:
+                split_docs = splitter.split_text(content)
+
+                for sub_idx, sub_content in enumerate(split_docs):
+                    doc = Document(
+                        page_content=sub_content,
+                        metadata={
+                            "id": file_name,
+                            "fragment": f"{idx+1}-{sub_idx+1}",
+                            "tipo": tipo
+                        }
+                    )
+                    all_documents.append(doc)
 
     print(f"Total documentos para indexar: {len(all_documents)}")
 
-    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    embedding_model = AzureOpenAIEmbeddings(
+        azure_endpoint=api_base,
+        azure_deployment=deployment_name,
+        api_key=api_key
+    )
 
     print(f"Guardando en base vectorial: {vectorstore_path}")
-    db = Chroma.from_documents(
-        documents=all_documents,
-        embedding=embedding_model,
-        persist_directory=vectorstore_path
+    db = Chroma(
+        persist_directory=vectorstore_path,
+        embedding_function=embedding_model
     )
+
+    for i in tqdm(range(0, len(all_documents), batch_size), desc="Indexando documentos"):
+        batch = all_documents[i:i + batch_size]
+
+        retries = 0
+        while retries <= max_retries:
+            try:
+                db.add_documents(batch)
+                break 
+            except Exception as e:
+                print(f"Error al indexar batch {i//batch_size + 1}: {str(e)}")
+                retries += 1
+                if retries > max_retries:
+                    print(f"Max reintentos alcanzados para batch {i//batch_size + 1}, continuando con el siguiente.")
+                    break
+                print(f"Esperando {retry_delay} segundos antes de reintentar...")
+                time.sleep(retry_delay)
+
     db.persist()
 
     print(f"Base vectorial guardada con {len(all_documents)} documentos.")
 
-
 def search_from_context_vec_db(
     prompt: str,
     vectorstore_path: str,
-    embedding_model=None,
-    k: int = 5
+    k: int = 3,
+    find_table: bool = False,
+    max_retries: int = 5,
+    retry_delay: int = 10
 ) -> list:
     """
     Busca documentos relevantes desde una base vectorial en disco, priorizando 80% textos y 20% tablas,
@@ -103,55 +147,63 @@ def search_from_context_vec_db(
     Args:
         prompt (str): Pregunta o input del usuario.
         vectorstore_path (str): Ruta donde está almacenada la base de datos vectorial.
-        embedding_model: Instancia de un modelo de embeddings compatible con LangChain.
         k (int): Número total de resultados a devolver.
+        find_table (bool): Si es True, buscará solo tablas; si es False, buscará tanto tablas como textos.
 
     Returns:
-        list[str]: Lista de textos de los documentos más relevantes.
+        list: Lista de documentos más relevantes.
     """
 
-    if embedding_model is None:
-        embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    embedding = None
+    retries = 0
+
+    while retries <= max_retries:
+        try:
+            client = AzureOpenAI(
+                azure_endpoint=api_base,
+                api_key=api_key,
+                api_version=api_version
+            )
+
+            response = client.embeddings.create(
+                input=[prompt],
+                model=deployment_name
+            )
+
+            embedding = response.data[0].embedding
+            break  # Éxito
+        except Exception as e:
+            print(f"Error al obtener embedding: {str(e)}")
+            retries += 1
+            if retries > max_retries:
+                raise Exception(f"Error permanente al generar embeddings tras {max_retries} reintentos.")
+            print(f"Reintentando en {retry_delay} segundos...")
+            time.sleep(retry_delay)
 
     print(f"Cargando vectorstore desde: {vectorstore_path}")
-    db = Chroma(
-        persist_directory=vectorstore_path,
-        embedding_function=embedding_model
-    )
+    db = Chroma(persist_directory=vectorstore_path)
 
-    num_tables = max(1, round(0.2 * k))
-    num_texts = k - num_tables
+    resultados_generales = db.similarity_search_by_vector(embedding, k=k*2)
 
-    print(f"Buscando {num_texts} textos y {num_tables} tablas más relevantes...")
+    if find_table:
+        resultados_finales = [doc for doc in resultados_generales if doc.metadata.get('tipo') == 'tabla']
+    else:
+        textos = [doc for doc in resultados_generales if doc.metadata.get('tipo') != 'tabla']
+        tablas = [doc for doc in resultados_generales if doc.metadata.get('tipo') == 'tabla']
 
-    resultados_texto = db.similarity_search(
-        prompt, 
-        k=num_texts * 2
-    )
-    textos_filtrados = [doc for doc in resultados_texto if doc.metadata.get('type') != 'table']
+        n_textos = int(k * 0.8)
+        n_tablas = k - n_textos
 
-    resultados_tabla = db.similarity_search(
-        prompt,
-        k=num_tables * 2
-    )
-    tablas_filtradas = [doc for doc in resultados_tabla if doc.metadata.get('type') == 'table']
+        resultados_finales = textos[:n_textos] + tablas[:n_tablas]
 
-    textos_final = textos_filtrados[:num_texts]
-    tablas_final = tablas_filtradas[:num_tables]
+        if len(resultados_finales) < k:
+            otros = [doc for doc in resultados_generales if doc not in resultados_finales]
+            resultados_finales += otros[:k - len(resultados_finales)]
 
-    resultados_finales = textos_final + tablas_final
-
-    if len(resultados_finales) < k:
-        print("No se encontraron suficientes documentos del tipo esperado. Rellenando...")
-        otros = [
-            doc for doc in (resultados_texto + resultados_tabla)
-            if doc not in resultados_finales
-        ]
-        resultados_finales += otros[:k - len(resultados_finales)]
-
-    print(f"Se han recuperado {len(resultados_finales)} fragmentos (textos + tablas).")
+    print(f"Se han recuperado {len(resultados_finales)} fragmentos.")
 
     return resultados_finales
+
 
 def process_temp_pdfs_batch(pdf_dir: str, db_dir: str):
     """
