@@ -1,5 +1,5 @@
 from smolagents import tool
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os

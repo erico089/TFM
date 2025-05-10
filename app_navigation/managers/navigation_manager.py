@@ -1,4 +1,4 @@
-from agents.navigation_agent import navigate_convocatoria, verify_convocatoria
+from app_navigation.agents.navigation_agent import navigate_convocatoria, verify_convocatoria
 from playwright.async_api import async_playwright
 import os
 import asyncio

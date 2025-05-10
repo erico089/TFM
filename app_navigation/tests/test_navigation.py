@@ -1,7 +1,7 @@
 import pytest
 import asyncio
-from managers.navigation_manager import NavigationManager
-from mock_data import CTDI_URL, CTDI_URLS
+from app_navigation.managers.navigation_manager import NavigationManager
+from app_navigation.tests.mock_data import CTDI_URL, CTDI_URLS
 import sys
 import os
 
