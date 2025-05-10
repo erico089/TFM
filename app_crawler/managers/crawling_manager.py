@@ -37,13 +37,13 @@ class CrawlingManager:
             return
 
         self.crawl_urls(links)
-        
         json_results = listJSONs(self.json_folder_base)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            executor.map(add_missing_keys_to_json, json_results)
+        # with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        #     executor.map(add_missing_keys_to_json, json_results)
+        for json in json_results:
+            add_missing_keys_to_json(json)
         downloadPDFs(json_results, self.pdf_folder_base)
         create_json_templates(json_results, self.json_folder_base)
-
         process_temp_pdfs_batch(self.pdf_folder_base, self.db_vec_temp_dir)
 
         self.run_refinement_agents_parallel(json_results, max_workers=5)
@@ -55,17 +55,23 @@ class CrawlingManager:
             insert_into_ayudas_ref_batch(self.json_folder_base)
             process_pdfs_to_shared_db(self.pdf_folder_base, self.db_vec_dir)
 
+    # def crawl_urls(self, links, max_workers=5):
+    #     """Nuevo método: hace el crawling y validación de todas las URLs en paralelo."""
+
+    #     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    #         futures = [executor.submit(self.crawl_process_single_url, url) for url in links]
+
+    #         for future in concurrent.futures.as_completed(futures):
+    #             try:
+    #                 future.result()
+    #             except Exception as exc:
+    #                 print(f"Error procesando URL: {exc}")
+
     def crawl_urls(self, links, max_workers=5):
         """Nuevo método: hace el crawling y validación de todas las URLs en paralelo."""
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(self.crawl_process_single_url, url) for url in links]
-
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    future.result()
-                except Exception as exc:
-                    print(f"Error procesando URL: {exc}")
+        for link in links:
+            self.crawl_process_single_url(link)
 
     def crawl_process_single_url(self, url):
         """Método privado que procesa una sola URL: crawl + validar"""
@@ -94,11 +100,20 @@ class CrawlingManager:
             else:
                 print(f"Regenerando JSON para {url} (ID anterior: {current_id})...")
 
-    def run_refinement_agents_parallel(self, json_results, max_workers=5):
+    # def run_refinement_agents_parallel(self, json_results, max_workers=1):
+    #     def refine_single_json(result):
+    #         json_name = os.path.splitext(os.path.basename(result))[0]
+    #         vector_db_path = f"{self.db_vec_temp_dir}/{getVectorialIdFromFile(json_name)}"
+    #         run_refinement_agent(result, vector_db_path, self.json_folder_base)
+
+    #     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    #         executor.map(refine_single_json, json_results)
+
+    def run_refinement_agents_parallel(self, json_results, max_workers=1):
         def refine_single_json(result):
             json_name = os.path.splitext(os.path.basename(result))[0]
             vector_db_path = f"{self.db_vec_temp_dir}/{getVectorialIdFromFile(json_name)}"
             run_refinement_agent(result, vector_db_path, self.json_folder_base)
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            executor.map(refine_single_json, json_results)
+        for json in json_results:
+            refine_single_json(json);

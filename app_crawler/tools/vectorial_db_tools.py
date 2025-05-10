@@ -1,15 +1,13 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 import os
 import pdfplumber
 from langchain_community.docstore.document import Document
-from azure.core.credentials import AzureKeyCredential
 from openai import AzureOpenAI
 from dotenv import load_dotenv
-from langchain_openai import AzureOpenAIEmbeddings
 import time
 from tqdm import tqdm  
+import uuid
 
 load_dotenv()
 api_key = os.environ["AZURE_EMBEDDING_KEY"]
@@ -43,9 +41,9 @@ def save_pdf_at_vec_db(
     vectorstore_path: str,
     chunk_size: int = 500,
     chunk_overlap: int = 100,
-    batch_size: int = 50, 
-    max_retries: int = 5,  
-    retry_delay: int = 10 
+    batch_size: int = 50,
+    max_retries: int = 5,
+    retry_delay: int = 10
 ):
     """
     Procesa una lista de PDFs y guarda sus embeddings en una base de datos vectorial Chroma,
@@ -99,17 +97,15 @@ def save_pdf_at_vec_db(
 
     print(f"Total documentos para indexar: {len(all_documents)}")
 
-    embedding_model = AzureOpenAIEmbeddings(
+    # Conexión manual a Azure OpenAI
+    client = AzureOpenAI(
+        api_version=api_version,
         azure_endpoint=api_base,
-        azure_deployment=deployment_name,
         api_key=api_key
     )
 
     print(f"Guardando en base vectorial: {vectorstore_path}")
-    db = Chroma(
-        persist_directory=vectorstore_path,
-        embedding_function=embedding_model
-    )
+    db = Chroma(persist_directory=vectorstore_path)
 
     for i in tqdm(range(0, len(all_documents), batch_size), desc="Indexando documentos"):
         batch = all_documents[i:i + batch_size]
@@ -117,8 +113,24 @@ def save_pdf_at_vec_db(
         retries = 0
         while retries <= max_retries:
             try:
-                db.add_documents(batch)
-                break 
+                texts_batch = [doc.page_content for doc in batch]
+                metadatas_batch = [doc.metadata for doc in batch]
+
+                response = client.embeddings.create(
+                    input=texts_batch,
+                    model=deployment_name
+                )
+                embeddings = [r.embedding for r in response.data]
+
+                db._collection.add(
+                    embeddings=embeddings,
+                    documents=texts_batch,
+                    metadatas=metadatas_batch,
+                    ids=[str(uuid.uuid4()) for _ in range(len(texts_batch))]
+                )
+
+
+                break
             except Exception as e:
                 print(f"Error al indexar batch {i//batch_size + 1}: {str(e)}")
                 retries += 1
@@ -171,7 +183,7 @@ def search_from_context_vec_db(
             )
 
             embedding = response.data[0].embedding
-            break  # Éxito
+            break
         except Exception as e:
             print(f"Error al obtener embedding: {str(e)}")
             retries += 1

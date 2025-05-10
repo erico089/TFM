@@ -21,7 +21,7 @@ def crawl_convocatoria(url_objetivo: str, id: str, base_json_path: str):
     agent = CodeAgent(
         model=model,
         tools=[fetch_html_tool, save_json_tool],
-        additional_authorized_imports=['requests', 'selenium', 'json']
+        additional_authorized_imports=[]
     )
 
     prompt = f"""
@@ -56,9 +56,8 @@ def crawl_convocatoria(url_objetivo: str, id: str, base_json_path: str):
     - Si un campo no está disponible, déjalo vacío.
     - Siempre que sea aplicable, **indica la unidad de medida** en los valores extraídos (por ejemplo: "10 años", "500.000 €", "3 meses", etc.).
 
-    Atención especial a los siguientes campos:
-    - **Link ficha técnica**: asegúrate de que realmente apunta a una ficha técnica o documento descriptivo. No aceptes enlaces rotos o genéricos si es posible.
-    - **Link orden de bases**: asegúrate de que apunta a la orden de bases real de la convocatoria.
+    **TAREA ADICIONAL MUY IMPORTANTE**:
+    A pesar de que tienes varias tareas, **lo más importante es extraer los enlaces a la ficha técnica y la orden de bases de la convocatoria**. Estos ficheros suelen estar en formato PDF. La ficha técnica puede aparecer también con nombres como "ficha", "ficha de instrumento" o "convocatoria". La orden de bases también puede ser conocida como "bases" o "ordenes". Asegúrate de extraerlos correctamente, si están disponibles.
 
     Lista de campos (en el JSON final **no incluyas el texto entre paréntesis**):
 
@@ -80,7 +79,7 @@ def crawl_convocatoria(url_objetivo: str, id: str, base_json_path: str):
         - Minimis (Indica si la ayuda es minimis o no en formato bool, si no se indica nada, indicar false)
         - Región de aplicación (Dependiendo de la línea de la convocatoria y la convocatoria como tal, a veces se indica una o varias regiones de aplicación)
         - Link ficha técnica (Enlace a la ficha técnica o ficha del instrumento de la convocatoria, si no hay ficha técnica, dejar vacío)
-        - Link convocatoria (Enlace con el que estás trabajando)
+        - Link convocatoria ({url_objetivo} pon siempre esta url, no otra que creeas, tiene que ser esta) 
         - Link orden de bases (Enlace a la orden de bases, si no hay orden de bases, dejar vacío)
 
     4. Usa la herramienta save_json_tool para guardar cada convocatoria en un archivo separado dentro de la carpeta {base_json_path}/convo_{id}.
@@ -89,6 +88,7 @@ def crawl_convocatoria(url_objetivo: str, id: str, base_json_path: str):
     5. Devuelve una lista con los nombres de los archivos generados, por ejemplo:
     ["{base_json_path}/convo_{id}/{id}_1.json", "{base_json_path}/convo_{id}/{id}_2.json"]
     """
+
 
     result = agent.run(prompt)
     print(result)

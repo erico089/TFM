@@ -223,8 +223,7 @@ def save_json_tool(carpeta_base: str, datos: Dict, nombre_archivo: str) -> str:
         return f"Error al guardar JSON: {str(e)}"
 
 
-@tool
-def get_organismo_context(vector_path: str) -> str:
+def get_organismo_context(vector_path: str, idx: int) -> str:
     """
     Extrae información sobre el organismo que convoca la ayuda.
 
@@ -234,353 +233,350 @@ def get_organismo_context(vector_path: str) -> str:
     Returns:
         str: Fragmentos relevantes relacionados con el organismo convocante.
     """
-    prompt = "¿Cual es el nombre del organismo o entidad que propone la convocatoria?"
+    prompts = ["¿Cual es el nombre del organismo o entidad que propone la convocatoria?",
+               "¿Quién es el responsable de emitir esta convocatoria pública?"]
  
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-@tool
-def get_beneficiarios_context(vector_path: str) -> str:
+def get_beneficiarios_context(vector_path: str, idx: int) -> str:
     """
     Identifica quiénes pueden solicitar la ayuda (beneficiarios).
-
-    Esta versión mejorada realiza búsquedas con dos formulaciones distintas para obtener
-    resultados más completos y variados sobre los beneficiarios.
-
+    
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con los beneficiarios de la convocatoria.
     """
-    prompt = "¿Quiénes pueden solicitar la ayuda? ¿Cuáles son los beneficiarios de la convocatoria?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Quiénes pueden solicitar la ayuda? ¿Cuáles son los beneficiarios de la convocatoria?",
+        "¿A qué personas, empresas o entidades está dirigida esta convocatoria?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-
-@tool
-def get_presupuesto_minimo_context(vector_path: str) -> str:
+def get_presupuesto_minimo_context(vector_path: str, idx: int) -> str:
     """
     Obtiene el presupuesto mínimo exigido para acceder a la ayuda.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre el presupuesto mínimo.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con el presupuesto mínimo exigido.
     """
-    prompt = "¿Qué importe mínimo se requiere para participar en la convocatoria?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Qué importe mínimo se requiere para participar en la convocatoria?",
+        "¿Cuál es la cantidad mínima de fondos que se pueden solicitar en esta ayuda?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-
-
-@tool
-def get_presupuesto_maximo_context(vector_path: str) -> str:
+def get_presupuesto_maximo_context(vector_path: str, idx: int) -> str:
     """
     Obtiene el presupuesto máximo permitido por la convocatoria.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre el presupuesto máximo.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con el presupuesto máximo permitido.
     """
-    prompt = "¿Qué importe máximo se puede financiar en esta ayuda?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Qué importe máximo se puede financiar en esta ayuda?",
+        "¿Cuál es la cantidad máxima de fondos que se pueden otorgar en esta convocatoria?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
 
-@tool
-def get_fecha_inicio_context(vector_path: str) -> str:
+def get_fecha_inicio_context(vector_path: str, idx: int) -> str:
     """
     Extrae la fecha de apertura del plazo de solicitud.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre la fecha de inicio del plazo de solicitud.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con la fecha de inicio del plazo de solicitud.
     """
-    prompt = "¿Cuándo comienza el plazo de solicitud de la convocatoria?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Cuándo comienza el plazo de solicitud de la convocatoria?",
+        "¿A partir de qué fecha se pueden presentar solicitudes para esta convocatoria?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-
-@tool
-def get_fecha_fin_context(vector_path: str) -> str:
+def get_fecha_fin_context(vector_path: str, idx: int) -> str:
     """
     Extrae la fecha de cierre del plazo de solicitud.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre la fecha de cierre del plazo de solicitud.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con la fecha de fin del plazo de solicitud.
     """
-    prompt = "¿Cuál es la fecha límite para la presentación de solicitudes?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Cuál es la fecha límite para la presentación de solicitudes?",
+        "¿Hasta qué día se pueden presentar solicitudes para esta convocatoria?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-
-@tool
-def get_objetivos_convocatoria_context(vector_path: str) -> str:
+def get_objetivos_convocatoria_context(vector_path: str, idx: int) -> str:
     """
     Recupera los objetivos o fines que persigue la convocatoria.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre los objetivos de la convocatoria.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con los objetivos de la convocatoria.
     """
-    prompt = "¿Cuáles son los objetivos y finalidades de la convocatoria?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Cuáles son los objetivos y finalidades de la convocatoria?",
+        "¿Qué pretende conseguir esta convocatoria? ¿Cuáles son sus principales metas?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
 
-@tool
-def get_anio_context(vector_path: str) -> str:
+
+def get_anio_context(vector_path: str, idx: int) -> str:
     """
     Identifica el año de publicación o vigencia de la convocatoria.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre el año de publicación o vigencia de la convocatoria.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con el año de publicación o vigencia.
     """
-    prompt = "¿En qué año se publica, abre o cual es la vigencia esta convocatoria?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿En qué año se publica, abre o cuál es la vigencia de esta convocatoria?",
+        "¿A qué año corresponde esta convocatoria?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-
-@tool
-def get_duracion_minima_context(vector_path: str) -> str:
+def get_duracion_minima_context(vector_path: str, idx: int) -> str:
     """
     Obtiene la duración mínima que deben tener los proyectos subvencionados.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre la duración mínima exigida para los proyectos.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con la duración mínima permitida.
     """
-    prompt = "¿Cuál es la duración mínima exigida para los proyectos?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Cuál es la duración mínima exigida para los proyectos?",
+        "¿Qué duración mínima deben cumplir los proyectos financiados?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-
-@tool
-def get_duracion_maxima_context(vector_path: str) -> str:
+def get_duracion_maxima_context(vector_path: str, idx: int) -> str:
     """
     Obtiene la duración máxima permitida para los proyectos o ayudas.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre la duración máxima permitida para los proyectos.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con la duración máxima permitida.
     """
-    prompt = "¿Cuál es la duración máxima permitida para los proyectos?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Cuál es la duración máxima permitida para los proyectos?",
+        "¿Qué duración máxima pueden tener los proyectos subvencionados?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
 
-@tool
-def get_tipo_financiacion_context(vector_path: str) -> str:
+def get_tipo_financiacion_context(vector_path: str, idx: int) -> str:
     """
     Determina el tipo de financiación ofrecida (subvención, préstamo, etc.).
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre el tipo de financiación ofrecida en la convocatoria.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con el tipo de financiación ofrecida.
     """
-    prompt = "¿Qué tipo de financiación ofrece esta convocatoria? ¿Es una subvención, un préstamo u otra modalidad?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Qué tipo de financiación ofrece esta convocatoria? ¿Es una subvención, un préstamo u otra modalidad?",
+        "¿Se trata de una ayuda económica directa, un crédito, o un incentivo fiscal?",
+        "¿Qué modalidad de financiación está prevista en esta convocatoria?",
+        "¿Se especifica si la ayuda es reembolsable o no reembolsable?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
 
-@tool
-def get_forma_plazo_cobro_context(vector_path: str) -> str:
+def get_forma_plazo_cobro_context(vector_path: str, idx: int) -> str:
     """
     Recupera la forma de pago y el calendario de cobro de la ayuda.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre la forma de pago y los plazos de cobro.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes relacionados con la forma y plazos de cobro de la ayuda.
     """
-    prompt = "¿Cómo y cuándo se realiza el cobro o desembolso de la ayuda? ¿Cuál es el calendario de pagos?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿Cómo y cuándo se realiza el cobro o desembolso de la ayuda? ¿Cuál es el calendario de pagos?",
+        "¿En qué plazos y de qué forma se recibe el dinero de la convocatoria?",
+        "¿Cuál es el procedimiento de pago establecido para las ayudas?",
+        "¿Se anticipa el pago total, se realiza en varios tramos o depende de hitos?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
 
-@tool
-def get_minimis_context(vector_path: str) -> str:
+def get_minimis_context(vector_path: str, idx: int) -> str:
     """
     Recupera fragmentos relacionados con si la ayuda se considera minimis según la normativa europea.
 
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre la normativa minimis.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
-        str: Fragmentos relevantes que indican si la ayuda está sujeta al régimen de minimis o si se menciona la normativa correspondiente.
+        str: Fragmentos relevantes sobre si la ayuda está sujeta al régimen de minimis.
     """
-    prompt = "¿La ayuda está sujeta al régimen de minimis según la normativa de la UE? ¿Se menciona que no requiere notificación a la Comisión Europea?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿La ayuda está sujeta al régimen de minimis según la normativa de la UE?",
+        "¿Se menciona que la ayuda se acoge a la normativa europea de minimis?",
+        "¿La ayuda requiere notificación previa a la Comisión Europea o está exenta?",
+        "¿Se especifica el cumplimiento de los límites establecidos para ayudas de minimis?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
-@tool
-def get_tipo_consorcio_context(vector_path: str) -> str:
+
+def get_tipo_consorcio_context(vector_path: str, idx: int) -> str:
     """
     Recupera fragmentos relacionados con el tipo de consorcio requerido o permitido en la convocatoria.
 
-    Este campo recoge información sobre si se exige o favorece la presentación conjunta de proyectos en consorcio,
-    qué características debe tener (número de socios, tipo de entidades participantes, condiciones de colaboración, etc.)
-    y requisitos específicos sobre su composición.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
         str: Fragmentos relevantes que describen los requisitos o características del consorcio en la ayuda.
     """
-    prompt = "¿Qué requisitos existen sobre la composición del consorcio en esta convocatoria? Número mínimo de socios, tipos de entidades, condiciones de colaboración, etc.¿Qué características deben cumplir los consorcios?"
-    
+    prompts = [
+        "¿Qué requisitos existen sobre la composición del consorcio en esta convocatoria? Número mínimo de socios, tipos de entidades, condiciones de colaboración, etc.",
+        "¿Se exige participación en consorcio? ¿Qué características deben tener los consorcios?",
+        "¿Cuántos participantes debe tener el consorcio y qué tipo de entidades deben formar parte?",
+        "¿Qué condiciones específicas deben cumplir los consorcios en esta convocatoria?"
+    ]
+
     results = []
     
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=1, find_table=True))
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=5))
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=1, find_table=True))
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=5))
     
     return results
 
 
-@tool
-def get_region_aplicacion_context(vector_path: str) -> str:
+def get_region_aplicacion_context(vector_path: str, idx: int) -> str:
     """
-    Recupera fragmentos relacionados con la región o regiones donde aplica la ayuda o convocatoria desde una base de datos vectorial.
-
-    Esta versión mejorada realiza búsquedas con tres formulaciones distintas para obtener
-    resultados más completos y variados sobre las zonas geográficas donde aplica la ayuda.
+    Recupera fragmentos relacionados con la región o regiones donde aplica la ayuda o convocatoria.
 
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
-        str: Fragmentos relevantes que mencionan zonas geográficas, comunidades autónomas o territorios donde es aplicable la ayuda.
+        str: Fragmentos relevantes que mencionan zonas geográficas donde es aplicable la ayuda.
     """
-    prompt =  "¿En qué regiones, comunidades autónomas o zonas geográficas aplica esta convocatoria? ¿Dónde es válida la ayuda?"
-    
-    return search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=4)
+    prompts = [
+        "¿En qué regiones, comunidades autónomas o zonas geográficas aplica esta convocatoria? ¿Dónde es válida la ayuda?",
+        "¿A qué territorios se dirige esta convocatoria?",
+        "¿La ayuda está limitada a una región específica o es de ámbito nacional?",
+        "¿Qué áreas geográficas cubre la ayuda ofrecida en esta convocatoria?"
+    ]
+    return search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=4)
 
 
-@tool
-def get_intensidad_subvencion_context(vector_path: str) -> str:
+def get_intensidad_subvencion_context(vector_path: str, idx: int) -> str:
     """
     Recupera fragmentos relacionados con la intensidad de la subvención (o tramo no reembolsable) desde una base de datos vectorial.
 
-    Este campo representa el porcentaje de la ayuda que no debe devolverse y suele depender de factores como el tipo de empresa,
-    la región, la modalidad del proyecto o el tipo de investigación. Esta información generalmente se presenta en forma de tabla
-    con categorías como "pequeña empresa", "mediana empresa", "gran empresa", e incluye porcentajes y condiciones específicas.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
-        str: Fragmentos relevantes que incluyen tablas, porcentajes u otras estructuras que describan la parte no reembolsable de la ayuda.
+        str: Fragmentos relevantes que incluyen tablas, porcentajes u otras estructuras que describen la parte no reembolsable de la ayuda.
     """
-
-    prompt = "¿Cuál es el porcentaje de subvención o ayuda a fondo perdido que ofrece la convocatoria? ¿Cuáles son las intensidades de ayuda según tipo de empresa, la región y el tipo de ayuda?"
+    prompts = [
+        "¿Cuál es el porcentaje máximo de ayuda a fondo perdido que ofrece la convocatoria? Detallar diferencias según tipo de empresa, región o categoría del proyecto.",
+        "¿Qué intensidades de ayuda aplican dependiendo de si se trata de investigación industrial, desarrollo experimental o innovación?",
+        "¿Cómo varía el porcentaje de subvención según el tamaño de la empresa (pequeña, mediana, grande) y la localización geográfica?",
+        "¿Qué condiciones específicas afectan la intensidad de la subvención? ¿Hay incrementos por colaboración en consorcio o participación de pymes?"
+    ]
     
     results = []
-    
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=1, find_table=True))
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=6))
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=1, find_table=True))
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=6))
     
     return results
 
-@tool
-def get_intensidad_prestamo_context(vector_path: str) -> str:
+
+def get_intensidad_prestamo_context(vector_path: str, idx: int) -> str:
     """
     Recupera fragmentos relacionados con la intensidad del préstamo (o tramo reembolsable) desde una base de datos vectorial.
 
-    Este campo representa la parte de la ayuda que debe devolverse, normalmente bajo condiciones definidas según el tipo de empresa,
-    la región, el tipo de proyecto o el marco normativo. La información suele aparecer en tablas que detallan porcentajes, plazos,
-    y categorías de beneficiarios.
-
     Args:
         vector_path (str): Ruta a la base de datos vectorial.
+        idx (int): Índice del intento para variar el prompt.
 
     Returns:
-        str: Fragmentos relevantes que incluyen información estructurada (como tablas o porcentajes) sobre las condiciones de devolución del préstamo.
+        str: Fragmentos relevantes que incluyen información estructurada sobre las condiciones de devolución del préstamo.
     """
-    prompt = "¿Cómo varían las condiciones de devolución del préstamo según el tipo de empresa, región tipo de ayuda?"
-        
-    results = []
+    prompts = [
+        "¿Qué porcentaje del proyecto es financiado mediante préstamo reembolsable? Indicar variaciones por tipo de actividad y tamaño de empresa.",
+        "¿Cómo se estructura el tramo reembolsable frente al tramo no reembolsable en la convocatoria?",
+        "¿Qué condiciones específicas (plazos, tipos de interés, carencia) regulan el tramo de préstamo en esta ayuda?",
+        "¿Existen diferencias en el préstamo otorgado según localización territorial, sector o tamaño de la empresa?"
+    ]
     
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=1, find_table=True))
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=6))
+    results = []
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=1, find_table=True))
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=6))
     
     return results
 
 
-@tool
-def get_costes_elegibles_context(vector_path: str) -> str:
+def get_costes_elegibles_context(vector_path: str, idx: int) -> str:
     """
-    Recupera fragmentos relacionados con los costes elegibles de una convocatoria desde una base de datos vectorial.
+    Recupera información sobre los costes elegibles dentro de una convocatoria, es decir, aquellos gastos que son financiables.
 
-    Este campo especifica qué tipos de gasto están permitidos o cubiertos por la ayuda: sueldos, material, subcontrataciones,
-    viajes, equipamiento, costes indirectos, etc. También puede incluir límites por categoría, condiciones específicas o
-    exclusiones.
+    Este campo incluye detalles sobre los tipos de gasto que pueden ser cubiertos por la subvención, tales como sueldos, equipamiento,
+    costes indirectos, viajes, y subcontrataciones. Las convocatorias a menudo definen categorías específicas de gasto financiables
+    y pueden imponer límites o restricciones a ciertos tipos de costos o beneficiarios.
 
     Args:
-        vector_path (str): Ruta a la base de datos vectorial.
+        vector_path (str): Ruta al archivo de la base de datos vectorial.
+        idx (int): Índice para variar las consultas sobre costes elegibles.
 
     Returns:
-        str: Fragmentos relevantes que mencionan categorías de gasto financiables o condiciones de elegibilidad del presupuesto.
+        str: Fragmentos relevantes sobre los tipos de gastos financiables y las condiciones que los acompañan.
     """
-    prompt = "¿Cuáles son los límites o exclusiones en los tipos de gastos financiables, como sueldos, equipamiento o subcontrataciones?"
+    prompts = [
+        "¿Qué tipos de gasto están considerados elegibles para esta convocatoria? ¿Hay limitaciones en los tipos de gasto financiables?",
+        "¿Cuáles son los gastos que pueden ser financiados por la ayuda? ¿Incluye costes indirectos, equipamiento o subcontrataciones?",
+        "¿Qué restricciones existen en relación con los gastos financiables? ¿Cuáles son los límites en cada categoría de gasto?",
+        "¿Cuáles son las condiciones de elegibilidad de los costes para la ayuda? ¿Se aplican exclusiones para ciertos tipos de gasto?"
+    ]
     
     results = []
     
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=1, find_table=True))
-    results.extend(search_from_context_vec_db(prompt, vectorstore_path=vector_path, k=6))
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=1, find_table=True))
+    results.extend(search_from_context_vec_db(prompts[idx], vectorstore_path=vector_path, k=6))
     
     return results
 

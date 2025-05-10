@@ -23,112 +23,136 @@ campos_revisar = [
         "field_name": "Organismo convocante",
         "field_ref_name": "Organismo convocante_ref",
         "topic_description": "Organismo o entidad responsable de emitir la convocatoria pública.",
-        "context_function": get_organismo_context
+        "context_function": get_organismo_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Fecha de inicio de la convocatoria",
         "field_ref_name": "Fecha de inicio de la convocatoria_ref",
         "topic_description": "Fecha en la que comienza el período para presentar solicitudes a la convocatoria.",
-        "context_function": get_fecha_inicio_context
+        "context_function": get_fecha_inicio_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Fecha de fin de la convocatoria",
         "field_ref_name": "Fecha de fin de la convocatoria_ref",
         "topic_description": "Fecha límite para presentar solicitudes a la convocatoria.",
-        "context_function": get_fecha_fin_context
+        "context_function": get_fecha_fin_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Objetivos de la convocatoria",
         "field_ref_name": "Objetivos de la convocatoria_ref",
         "topic_description": "Propósitos o metas que busca alcanzar la convocatoria.",
-        "context_function": get_objetivos_convocatoria_context
+        "context_function": get_objetivos_convocatoria_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Beneficiarios",
         "field_ref_name": "Beneficiarios_ref",
         "topic_description": "Personas, empresas o entidades que pueden recibir las ayudas o beneficios de la convocatoria.",
-        "context_function": get_beneficiarios_context
+        "context_function": get_beneficiarios_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Anio",
         "field_ref_name": "Anio_ref",
         "topic_description": "Año en el que se publica o aplica la convocatoria.",
-        "context_function": get_anio_context
+        "context_function": get_anio_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Presupuesto mínimo disponible",
         "field_ref_name": "Presupuesto mínimo disponible_ref",
         "topic_description": "Cantidad mínima de fondos disponibles para ser otorgados en la convocatoria.",
-        "context_function": get_presupuesto_minimo_context
+        "context_function": get_presupuesto_minimo_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Presupuesto máximo disponible",
         "field_ref_name": "Presupuesto máximo disponible_ref",
         "topic_description": "Cantidad máxima de fondos disponibles para ser otorgados en la convocatoria.",
-        "context_function": get_presupuesto_maximo_context
+        "context_function": get_presupuesto_maximo_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Duración mínima",
         "field_ref_name": "Duración mínima_ref",
         "topic_description": "Duración mínima de los proyectos o actividades financiadas por la convocatoria.",
-        "context_function": get_duracion_minima_context
+        "context_function": get_duracion_minima_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Duración máxima",
         "field_ref_name": "Duración máxima_ref",
         "topic_description": "Duración máxima de los proyectos o actividades financiadas por la convocatoria.",
-        "context_function": get_duracion_maxima_context
+        "context_function": get_duracion_maxima_context,
+        "max_intentos": 1
     },
     {
         "field_name": "Tipo de financiación",
         "field_ref_name": "Tipo de financiación_ref",
         "topic_description": "Modalidad o forma de la ayuda financiera (subvención, préstamo, etc.).",
-        "context_function": get_tipo_financiacion_context
+        "context_function": get_tipo_financiacion_context,
+        "max_intentos": 3
     },
     {
         "field_name": "Forma y plazo de cobro",
         "field_ref_name": "Forma y plazo de cobro_ref",
         "topic_description": "Cómo y cuándo se recibe el dinero otorgado en la convocatoria.",
-        "context_function": get_forma_plazo_cobro_context
+        "context_function": get_forma_plazo_cobro_context,
+        "max_intentos": 3
     },
     {
         "field_name": "Minimis",
         "field_ref_name": "Minimis_ref",
         "topic_description": "Indicación de si la ayuda está sujeta a la normativa de ayudas mínimas ('de minimis') según legislación europea.",
-        "context_function": get_minimis_context
+        "context_function": get_minimis_context,
+        "max_intentos": 2
     },
     {
         "field_name": "Región de aplicación",
         "field_ref_name": "Región de aplicación_ref",
         "topic_description": "Área geográfica donde se aplica o limita la convocatoria.",
-        "context_function": get_region_aplicacion_context
+        "context_function": get_region_aplicacion_context,
+        "max_intentos": 3
     },
     {
         "field_name": "Intensidad de la subvención",
         "field_ref_name": "Intensidad de la subvención_ref",
         "topic_description": "Porcentaje de la subvención respecto al coste total del proyecto.",
-        "context_function": get_intensidad_subvencion_context
+        "context_function": get_intensidad_subvencion_context,
+        "max_intentos": 3
     },
     {
         "field_name": "Intensidad del préstamo",
         "field_ref_name": "Intensidad del préstamo_ref",
         "topic_description": "Porcentaje o proporción del préstamo respecto al coste total del proyecto.",
-        "context_function": get_intensidad_prestamo_context
+        "context_function": get_intensidad_prestamo_context,
+        "max_intentos": 3
     },
     {
         "field_name": "Tipo de consorcio",
         "field_ref_name": "Tipo de consorcio_ref",
         "topic_description": "Tipo de agrupación de entidades requerida o permitida para acceder a la convocatoria.",
-        "context_function": get_tipo_consorcio_context
+        "context_function": get_tipo_consorcio_context,
+        "max_intentos": 3
     },
     {
         "field_name": "Costes elegibles",
         "field_ref_name": "Costes elegibles_ref",
         "topic_description": "Gastos o partidas de coste que son admitidos para ser financiados en el proyecto.",
-        "context_function": get_costes_elegibles_context
+        "context_function": get_costes_elegibles_context,
+        "max_intentos": 3
     }
 ]
 
+
+def verificar_campo(path_json, field_name_ref):
+    """Verifica si el campo field_name_ref existe en el JSON."""
+    with open(path_json, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return field_name_ref in data and data[field_name_ref] not in [None, "", []]
 
 def run_refinement_agent(path_json: str, vector_path: str, output_base_path: str):
     for campo in campos_revisar:
@@ -136,17 +160,25 @@ def run_refinement_agent(path_json: str, vector_path: str, output_base_path: str
         field_name_ref = campo["field_ref_name"]
         topic_description = campo["topic_description"]
         context_function = campo["context_function"]
+        max_intentos = campo["max_intentos"]
 
-        context = context_function(vector_path)
+        intento = 0
+        exito = False
 
-        run_mini_agent(
-            path_json=path_json,
-            field_name=field_name,
-            field_name_ref=field_name_ref,
-            topic_description=topic_description,
-            context=context,
-            output_base_path = output_base_path
-        )
+        while intento < max_intentos and not exito:
+            context = context_function(vector_path, intento)
+
+            run_mini_agent(
+                path_json=path_json,
+                field_name=field_name,
+                field_name_ref=field_name_ref,
+                topic_description=topic_description,
+                context=context,
+                output_base_path=output_base_path
+            )
+            
+            exito = verificar_campo(path_json, field_name_ref)
+            intento += 1
 
 
 def run_mini_agent(
