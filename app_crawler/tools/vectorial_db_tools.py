@@ -97,7 +97,6 @@ def save_pdf_at_vec_db(
 
     print(f"Total documentos para indexar: {len(all_documents)}")
 
-    # Conexión manual a Azure OpenAI
     client = AzureOpenAI(
         api_version=api_version,
         azure_endpoint=api_base,
