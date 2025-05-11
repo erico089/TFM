@@ -157,6 +157,11 @@ Dentro de la carpeta raíz del proyecto, encontrarás el archivo `.env.example`.
    - **AZURE_OPENAI_INPUT**: El punto de entrada para interactuar con Azure OpenAI.
    - **AZURE_API_VERSION**: La versión de la API de Azure que vas a utilizar.
    - **AZURE_OPENAI_MODEL_ID**: El identificador del modelo en Azure OpenAI que se utilizará.
+   - **AZURE_EMBEDDING_KEY**: La clave de API para embeddings en Azure.
+   - **AZURE_EMBEDDING_DEPLOYMENT_NAME**: El nombre del despliegue del modelo de embeddings en Azure.
+   - **AZURE_EMBEDDING_ENDPOINT**: El endpoint para el servicio de embeddings en Azure.
+   - **AZURE_EMBEDDING_MODEL_ID**: El identificador del modelo de embeddings en Azure.
+   - **AZURE_EMBEDDING_API_VERSION**: La versión de la API para embeddings en Azure.
 
    Ejemplo de cómo se vería el archivo `.env`:
 
@@ -168,6 +173,12 @@ Dentro de la carpeta raíz del proyecto, encontrarás el archivo `.env.example`.
    AZURE_OPENAI_INPUT=entrada_azure
    AZURE_API_VERSION=version_api_azure
    AZURE_OPENAI_MODEL_ID=tu_modelo_id
+
+   AZURE_EMBEDDING_KEY=tu_clave_de_api_embeddings
+   AZURE_EMBEDDING_DEPLOYMENT_NAME=nombre_del_despliegue_embeddings
+   AZURE_EMBEDDING_ENDPOINT=endpoint_embeddings
+   AZURE_EMBEDDING_MODEL_ID=identificador_modelo_embeddings
+   AZURE_EMBEDDING_API_VERSION=version_api_embeddings
    ```
 
 ## Cómo ejecutar las aplicaciones
@@ -188,7 +199,7 @@ Para ejecutar cualquiera de las aplicaciones, sigue estos pasos:
 2. **Ejecuta la aplicación**:
 
    ```bash
-   python app_chat/main.py
+   python -m app_chat.main
    ```
 
 ---
@@ -200,8 +211,8 @@ Este mismo proceso se aplica para las otras dos aplicaciones, solo cambia el nom
    - Para **AppNavegacion**: `conda activate appnavegacion_env`
 
 2. Ejecuta el archivo `main.py`:
-   - Para **AppCrawling**: `python app_crawler/main.py`
-   - Para **AppNavegacion**: `python app_navigation/main.py`
+   - Para **AppCrawling**: `python -m app_crawler.main`
+   - Para **AppNavegacion**: `python -m app_navigation.main`
    
 
 Así, cada aplicación funcionará de manera independiente, pero el proceso es el mismo.
@@ -219,11 +230,38 @@ Así, cada aplicación funcionará de manera independiente, pero el proceso es e
 
 ## Tests
 
-//TODO
+Dependiendo de para que aplicación, seguiremos los siguientes modificando el ejemplo según la aplicación que necesitemos usar.
+
+1. Activa el entorno Conda correspondiente
+
+   - Para **AppCrawling**: `conda activate appcrawling_env`
+   - Para **AppNavegacion**: `conda activate appnavegacion_env`
+   - Para **AppChat**: `conda activate appchat_env`
+
+2. Seguidamente, desde el directorio base ejecutaremos el siguiente comando para lanzar los tests:
+
+```bash
+# Para lanzar los tests de la app de navegación
+set PYTHONPATH=. && pytest app_navigation/tests/
+```
+
+```bash
+# Para lanzar los tests de la app de crawling
+set PYTHONPATH=. && pytest app_crawling/tests/
+```
+
+```bash
+# Para lanzar los tests de la app de chat
+set PYTHONPATH=. && pytest app_chat/tests/
+```
+
+Es importante saber, que estos test son pesados de ejecutar, es por ello, que en cada una de las carpetas de tests se guardan capturas de resultados de ejecuciónes de tests.
 
 ## Importante
 
 Las aplicaciones **Crawling** y **Navegación** son muy pesadas de ejecutar debido a la gran cantidad de datos que procesan. 
 
 Por ello, se proporcionan **datos precargados** para que puedas utilizar directamente la aplicación **Chat** sin necesidad de ejecutar estas dos aplicaciones pesadas.
+
+Para ello, en el archivo .env, encontraras la variable de entorno USE_BACKUP_DATA. Marca con TRUE si quieres usar datos precargados (por defecto ya esta en TRUE). Ten en cuenta que esta carga elimina los datos ya existentes en ambas bases de datos.
 
