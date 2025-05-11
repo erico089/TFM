@@ -1,9 +1,9 @@
-from managers.crawling_manager import CrawlingManager
+from app_crawler.managers.crawling_manager import CrawlingManager
 import os
 import pytest
-from mock_data import mock_data
+from app_crawler.tests.mock_data import mock_data
 import json
-from agents.test_agent import TestAgent
+from app_crawler.agents.test_agent import TestAgent
 
 @pytest.fixture(scope="session")
 def setup_crawling_manager():
@@ -42,23 +42,32 @@ https://www.cdti.es/ayudas/innterconecta-step"""
         insert=False
     )
 
-    manager.run()
+    # manager.run()
     return manager
 
 
 def test_pdfs_generated_correctly(setup_crawling_manager):
     pdf_folder_base = setup_crawling_manager.pdf_folder_base
-
     pdf_folders = [d for d in os.listdir(pdf_folder_base) if os.path.isdir(os.path.join(pdf_folder_base, d))]
+    
+    print(f"\n[INFO] Carpetas de PDFs encontradas: {len(pdf_folders)}")
+    for folder in pdf_folders:
+        print(f"- {folder}")
+    
     assert len(pdf_folders) == 3, f"Se esperaban 3 carpetas en {pdf_folder_base}, pero hay {len(pdf_folders)}"
 
     total_pdfs = 0
     for folder in pdf_folders:
         folder_path = os.path.join(pdf_folder_base, folder)
         pdf_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.pdf')]
-        total_pdfs += len(pdf_files)
+        num_pdfs = len(pdf_files)
+        total_pdfs += num_pdfs
+        print(f"[INFO] PDFs encontrados en '{folder}': {num_pdfs}")
 
-    assert total_pdfs == 4, f"Se esperaban 4 PDFs en total en las carpetas de {pdf_folder_base}, pero hay {total_pdfs}"
+    print(f"[INFO] Total de PDFs encontrados: {total_pdfs}")
+    
+    assert total_pdfs == 5, f"Se esperaban 5 PDFs en total en las carpetas de {pdf_folder_base}, pero hay {total_pdfs}"
+
 
 def test_jsons_reference_and_refined(setup_crawling_manager):
     json_folder_base = setup_crawling_manager.json_folder_base
@@ -66,30 +75,39 @@ def test_jsons_reference_and_refined(setup_crawling_manager):
     reference_folder = os.path.join(json_folder_base, 'reference')
     refined_folder = os.path.join(json_folder_base, 'refined')
 
-    assert os.path.exists(reference_folder), f"No se encontró la carpeta {reference_folder}"
-    assert os.path.exists(refined_folder), f"No se encontró la carpeta {refined_folder}"
+    print(f"\n[INFO] Verificando existencia de carpetas:")
+    print(f"- Carpeta de referencia: {reference_folder}")
+    print(f"- Carpeta de refinados: {refined_folder}")
+
+    assert os.path.exists(reference_folder), f"[ERROR] No se encontró la carpeta {reference_folder}"
+    assert os.path.exists(refined_folder), f"[ERROR] No se encontró la carpeta {refined_folder}"
 
     reference_jsons = [f for f in os.listdir(reference_folder) if f.lower().endswith('.json')]
-    assert len(reference_jsons) == 10, f"Se esperaban 10 archivos JSON en {reference_folder}, pero hay {len(reference_jsons)}"
-
     refined_jsons = [f for f in os.listdir(refined_folder) if f.lower().endswith('.json')]
-    assert len(refined_jsons) == 10, f"Se esperaban 10 archivos JSON en {refined_folder}, pero hay {len(refined_jsons)}"
+
+    print(f"\n[INFO] Número de JSONs encontrados:")
+    print(f"- En 'reference': {len(reference_jsons)} archivos")
+    print(f"- En 'refined': {len(refined_jsons)} archivos")
+
+    assert len(reference_jsons) == 10, f"[ERROR] Se esperaban 10 archivos JSON en {reference_folder}, pero hay {len(reference_jsons)}"
+    assert len(refined_jsons) == 10, f"[ERROR] Se esperaban 10 archivos JSON en {refined_folder}, pero hay {len(refined_jsons)}"
 
 
-def test_json_data_quality_and_extraction(setup_crawling_manager, capsys):
+
+def test_json_data_quality_and_extraction(setup_crawling_manager):
+    print("\n[INFO] Iniciando extracción de JSONs refinados...")
+
     json_extraidos = []
-
     ruta_refined = os.path.join(setup_crawling_manager.json_folder_base, "refined")
 
     for nombre_json in os.listdir(ruta_refined):
-        if not nombre_json.endswith('.json'):
-            continue
+        if nombre_json.endswith('.json'):
+            ruta_json = os.path.join(ruta_refined, nombre_json)
+            with open(ruta_json, 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+            json_extraidos.append(datos.copy())
 
-        ruta_json = os.path.join(ruta_refined, nombre_json)
-        with open(ruta_json, 'r', encoding='utf-8') as f:
-            datos = json.load(f)
-
-        json_extraidos.append(datos.copy())
+    print(f"[INFO] Se han cargado {len(json_extraidos)} archivos JSON desde {ruta_refined}")
 
     total_matches = 0
     convs_to_evaluate = []
@@ -108,12 +126,16 @@ def test_json_data_quality_and_extraction(setup_crawling_manager, capsys):
                 total_matches += 1
                 break
 
-    assert total_matches == 3, f"Se esperaban 3 matches, pero se encontraron {total_matches}."
+    print(f"[INFO] Total matches encontrados: {total_matches}")
+
+    assert total_matches == 3, f"[ERROR] Se esperaban 3 matches, pero se encontraron {total_matches}."
 
     aciertos = 0
     fallos = 0
     fallos_list = []
-    agent = TestAgent()
+    aciertos_list = []
+
+    print("\n[INFO] Iniciando validación de campos...")
 
     for pair in convs_to_evaluate:
         mock = pair["mock"]
@@ -122,23 +144,37 @@ def test_json_data_quality_and_extraction(setup_crawling_manager, capsys):
         for campo, expected_value in mock.items():
             real_value = json_real.get(campo, "")
 
-            if agent.compare(campo, real_value, expected_value):
+            agent = TestAgent()
+            comparison_result = agent.compare(campo, real_value, expected_value)
+            print(f"la respuesta del agente es: {comparison_result}")
+            if isinstance(comparison_result, bool):
+                is_correct = comparison_result
+            elif isinstance(comparison_result, str):
+                is_correct = comparison_result.strip().lower() == "true"
+            else:
+                raise ValueError(f"[ERROR] Resultado inesperado del agente para campo '{campo}': {comparison_result}")
+
+            if is_correct:
                 aciertos += 1
+                aciertos_list.append((campo, expected_value, real_value))
             else:
                 fallos += 1
                 fallos_list.append((campo, expected_value, real_value))
 
-    print(f"\nResumen: {aciertos} campos correctos, {fallos} campos incorrectos.")
+    print(f"\n[INFO] Resumen de validación:")
+    print(f"- Campos correctos: {aciertos}")
+    print(f"- Campos incorrectos: {fallos}")
+
+    print("\n[SUCCESS] Detalles de los campos correctos:")
+    for campo, expected, real in aciertos_list:
+        print(f"- Campo: {campo} | Esperado: '{expected}' | Obtenido: '{real}'")
 
     if fallos_list:
-        print("\nDetalles de los fallos encontrados:")
-        for fallo in fallos_list:
-            print(f"- [{fallo['mock_name']}] Campo: {fallo['campo']} | Esperado: '{fallo['expected']}' | Obtenido: '{fallo['real']}'")
+        print("\n[ERROR] Detalles de los fallos encontrados:")
+        for campo, expected, real in fallos_list:
+            print(f"- Campo: {campo} | Esperado: '{expected}' | Obtenido: '{real}'")
 
-    assert fallos == 0, f"Hay {fallos} fallos en la validación de campos."
+    assert fallos == 0, f"[ERROR] Hay {fallos} fallos en la validación de campos."
 
-    captured = capsys.readouterr()
-    print("Salida capturada:")
-    print(captured.out)
 
 

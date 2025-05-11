@@ -9,7 +9,6 @@ from agents.refinement_agent import run_refinement_agent
 from tools.vectorial_db_tools import process_temp_pdfs_batch, process_pdfs_to_shared_db
 from managers.postgres_manager import insert_into_ayudas_batch, insert_into_ayudas_ref_batch, fix_minimis_in_jsons
 from tools.utils import downloadPDFs, listJSONs, validate_convocatoria_json, add_missing_keys_to_json, getVectorialIdFromFile, load_refined_urls, create_json_templates
-import concurrent.futures
 
 class CrawlingManager:
     def __init__(

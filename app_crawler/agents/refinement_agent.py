@@ -2,8 +2,8 @@ import os
 import json
 from smolagents import CodeAgent
 from dotenv import load_dotenv
-from tools.tools import save_json_field_tool, add_field_ref_json_tool, get_organismo_context, get_beneficiarios_context, get_presupuesto_minimo_context, get_presupuesto_maximo_context, get_fecha_inicio_context, get_fecha_fin_context, get_objetivos_convocatoria_context, get_anio_context, get_duracion_minima_context, get_duracion_maxima_context, get_tipo_financiacion_context, get_forma_plazo_cobro_context, get_minimis_context, get_region_aplicacion_context, get_intensidad_subvencion_context, get_intensidad_prestamo_context, get_tipo_consorcio_context, get_costes_elegibles_context, get_intensidad_subvencion_context, get_intensidad_prestamo_context, get_costes_elegibles_context
-from azureOpenAIServerModel import AzureOpenAIServerModel
+from app_crawler.tools.tools import save_json_field_tool, add_field_ref_json_tool, get_organismo_context, get_beneficiarios_context, get_presupuesto_minimo_context, get_presupuesto_maximo_context, get_fecha_inicio_context, get_fecha_fin_context, get_objetivos_convocatoria_context, get_anio_context, get_duracion_minima_context, get_duracion_maxima_context, get_tipo_financiacion_context, get_forma_plazo_cobro_context, get_minimis_context, get_region_aplicacion_context, get_intensidad_subvencion_context, get_intensidad_prestamo_context, get_tipo_consorcio_context, get_costes_elegibles_context, get_intensidad_subvencion_context, get_intensidad_prestamo_context, get_costes_elegibles_context
+from app_crawler.azureOpenAIServerModel import AzureOpenAIServerModel
 
 load_dotenv()
 api_key = os.environ["AZURE_OPENAI_KEY"]
@@ -36,7 +36,7 @@ campos_revisar = [
     {
         "field_name": "Fecha de fin de la convocatoria",
         "field_ref_name": "Fecha de fin de la convocatoria_ref",
-        "topic_description": "Fecha límite para presentar solicitudes a la convocatoria.",
+        "topic_description": "Fecha límite para presentar solicitudes a la convocatoria. Si se indica, esta puede estar abierta de forma permanente.",
         "context_function": get_fecha_fin_context,
         "max_intentos": 1
     },
@@ -85,7 +85,7 @@ campos_revisar = [
     {
         "field_name": "Duración máxima",
         "field_ref_name": "Duración máxima_ref",
-        "topic_description": "Duración máxima de los proyectos o actividades financiadas por la convocatoria.",
+        "topic_description": "Duración máxima de los proyectos o actividades financiadas por la convocatoria. Si se indica, la duración maxima puede ser permanente",
         "context_function": get_duracion_maxima_context,
         "max_intentos": 1
     },
@@ -120,21 +120,21 @@ campos_revisar = [
     {
         "field_name": "Intensidad de la subvención",
         "field_ref_name": "Intensidad de la subvención_ref",
-        "topic_description": "Porcentaje de la subvención respecto al coste total del proyecto.",
+        "topic_description": "Porcentaje de la subvención respecto al coste total del proyecto. Si la convocatoria de la linea no aplica al ser unicamente prestamo, indicar que no aplica.",
         "context_function": get_intensidad_subvencion_context,
         "max_intentos": 3
     },
     {
         "field_name": "Intensidad del préstamo",
         "field_ref_name": "Intensidad del préstamo_ref",
-        "topic_description": "Porcentaje o proporción del préstamo respecto al coste total del proyecto.",
+        "topic_description": "Porcentaje o proporción del préstamo respecto al coste total del proyecto. Si la convocatoria de la linea no aplica al ser unicamente subvencion, indicar que no aplica.",
         "context_function": get_intensidad_prestamo_context,
         "max_intentos": 3
     },
     {
         "field_name": "Tipo de consorcio",
         "field_ref_name": "Tipo de consorcio_ref",
-        "topic_description": "Tipo de agrupación de entidades requerida o permitida para acceder a la convocatoria.",
+        "topic_description": "Tipo de agrupación de entidades requerida o permitida para acceder a la convocatoria. Si la convocatoria de la linea no aplica consorcio, también se debe indicar.",
         "context_function": get_tipo_consorcio_context,
         "max_intentos": 3
     },

@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from smolagents import tool
 from selenium import webdriver
 from pypdf import PdfReader
-from tools.vectorial_db_tools import search_from_context_vec_db
+from app_crawler.tools.vectorial_db_tools import search_from_context_vec_db
 from urllib.parse import urlparse, urljoin
 from typing import Dict
 

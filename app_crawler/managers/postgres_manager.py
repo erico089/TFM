@@ -2,7 +2,7 @@ import psycopg2
 import json
 from dotenv import load_dotenv
 import os
-from tools.utils import getIdFromFile, getVectorialIdFromFile
+from app_crawler.tools.utils import getIdFromFile, getVectorialIdFromFile
 
 load_dotenv()
 

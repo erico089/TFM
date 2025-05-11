@@ -242,18 +242,19 @@ Dependiendo de para que aplicación, seguiremos los siguientes modificando el ej
 
 ```bash
 # Para lanzar los tests de la app de navegación
-set PYTHONPATH=. && pytest app_navigation/tests/
+set PYTHONPATH=. && pytest -s app_navigation/tests/
 ```
 
 ```bash
-# Para lanzar los tests de la app de crawling
-set PYTHONPATH=. && pytest app_crawling/tests/
+# Para lanzar los tests de la app de crawler
+set PYTHONPATH=. && pytest -s app_crawler/tests/
 ```
 
 ```bash
 # Para lanzar los tests de la app de chat
-set PYTHONPATH=. && pytest app_chat/tests/
+set PYTHONPATH=. && pytest -s app_chat/tests/
 ```
+La -s en estos comandos es importante para ver información mas detallada. Quizas veas que un test ha fallado pero en realidad solo han fallado 5 campos de todo el test, con lo que es un fallo parcial.
 
 Es importante saber, que estos test son pesados de ejecutar, es por ello, que en cada una de las carpetas de tests se guardan capturas de resultados de ejecuciónes de tests.
 
