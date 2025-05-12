@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from azureOpenAIServerModel import AzureOpenAIServerModel
+from app_chat.azureOpenAIServerModel import AzureOpenAIServerModel
 from smolagents import CodeAgent
 
 class TestAgent:

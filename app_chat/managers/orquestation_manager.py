@@ -1,7 +1,7 @@
 import threading
 import time
-from agents.orquestation_agent import OrchestrationAgent
-from logging_setup import redirect_stdout_to_logger
+from app_chat.agents.orquestation_agent import OrchestrationAgent
+from app_chat.logging_setup import redirect_stdout_to_logger
 import os
 import psycopg2
 from dotenv import load_dotenv
@@ -51,8 +51,8 @@ class OrchestrationManager:
             delay_thread = threading.Thread(target=self._delayed_processing_message)
             delay_thread.start()
 
-            with redirect_stdout_to_logger():
-                response_obj = self.agent.analyze_prompt(user_input, context)
+            # with redirect_stdout_to_logger():
+            response_obj = self.agent.analyze_prompt(user_input, context)
 
             self.response_received.set()
             delay_thread.join()

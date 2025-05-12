@@ -45,6 +45,46 @@ def get_record_by_id(id: int) -> tuple:
     return result
 
 @tool
+def get_record_by_id_(id: int) -> tuple:
+    """
+    Ejecuta una consulta SELECT con JOIN para obtener un registro de la tabla 'ayudas_mock' y 'ayudas_ref_mock' según su ID.
+
+    Args:
+        id (int): ID del registro que se desea consultar.
+
+    Returns:
+        tuple: Tupla con los valores de las columnas del registro encontrado, o None si no existe.
+    """
+
+    load_dotenv()
+    DB_CONFIG = {
+        "dbname": "ayudas",
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+        "host": "localhost",
+        "port": 5432
+    }
+
+    connection = psycopg2.connect(
+        dbname=DB_CONFIG["dbname"],
+        user=DB_CONFIG["user"],          
+        password=DB_CONFIG["password"], 
+        host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
+        options="-c client_encoding=UTF8"
+    )
+    
+    cur = connection.cursor()
+    cur.execute(
+        "SELECT * FROM ayudas_mock INNER JOIN ayudas_ref_mock ON ayudas_mock.id = ayudas_ref_mock.id WHERE ayudas_mock.id = %s;",
+        (id,)
+    )
+    result = cur.fetchone()
+    cur.close()
+    connection.close()
+    return result
+
+@tool
 def get_record_by_id_vectorial(id_vectorial: int) -> tuple:
     """
     Ejecuta una consulta SELECT con JOIN para obtener un registro de la tabla 'ayudas' y 'ayudas_ref' según su ID vectorial.
@@ -77,6 +117,46 @@ def get_record_by_id_vectorial(id_vectorial: int) -> tuple:
     cur = connection.cursor()
     cur.execute(
         "SELECT * FROM ayudas INNER JOIN ayudas_ref ON ayudas.id = ayudas_ref.id WHERE ayudas.id_vectorial = %s;",
+        (id_vectorial,)
+    )
+    result = cur.fetchone()
+    cur.close()
+    connection.close()
+    return result
+
+@tool
+def get_record_by_id_vectorial_(id_vectorial: int) -> tuple:
+    """
+    Ejecuta una consulta SELECT con JOIN para obtener un registro de la tabla 'ayudas_mock' y 'ayudas_ref_mock' según su ID vectorial.
+
+    Args:
+        id_vectorial (int): ID vectorial de los registros que se desean consultar.
+
+    Returns:
+        tuple: Tupla con los valores de las columnas del registro encontrado, o None si no existe.
+    """
+
+    load_dotenv()
+    DB_CONFIG = {
+        "dbname": "ayudas",
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+        "host": "localhost",
+        "port": 5432
+    }
+
+    connection = psycopg2.connect(
+        dbname=DB_CONFIG["dbname"],
+        user=DB_CONFIG["user"],          
+        password=DB_CONFIG["password"], 
+        host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
+        options="-c client_encoding=UTF8"
+    )
+    
+    cur = connection.cursor()
+    cur.execute(
+        "SELECT * FROM ayudas_mock INNER JOIN ayudas_ref_mock ON ayudas_mock.id = ayudas_ref_mock.id WHERE ayudas_mock.id_vectorial = %s;",
         (id_vectorial,)
     )
     result = cur.fetchone()

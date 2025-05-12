@@ -1,10 +1,10 @@
 from smolagents import CodeAgent, DuckDuckGoSearchTool
 from dotenv import load_dotenv
 import os
-from azureOpenAIServerModel import AzureOpenAIServerModel
-from agents.vectorial_agent import ask_vectorial_agent
-from agents.postgres_agent import ask_postgres_agent
-from tools.postgres_tools import extract_from_id_if_present
+from app_chat.azureOpenAIServerModel import AzureOpenAIServerModel
+from app_chat.agents.vectorial_agent import ask_vectorial_agent
+from app_chat.agents.postgres_agent import ask_postgres_agent
+from app_chat.tools.postgres_tools import extract_from_id_if_present
 
 class OrchestrationAgent:
     def __init__(self):
@@ -76,7 +76,9 @@ class OrchestrationAgent:
 
         4. **DuckDuckGoSearchTool**: Realiza búsquedas generales en Internet. Úsala si:
         - La pregunta es sobre conceptos generales, definiciones o historia de convocatorias.
-        - No obtienes suficiente información de las bases de datos anteriores.
+        - Si el usuario necesita información extra de la convocatoria, pero siempre indicando que lo has buscado en internet.
+        - En ningun caso responderas información que no tenga con el tema de ayudas.
+        - En ningun caso responderas al usuario sobre otras convocatorias que encuentres en internet.
 
         Normas de actuación:
         - **Prioriza el uso de extract_from_id_if_present si tienes un ID claro** en el contexto o en el prompt.

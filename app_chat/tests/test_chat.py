@@ -2,12 +2,42 @@ import pytest
 import psycopg2
 import os
 from dotenv import load_dotenv
-from mock_data import mock_ayudas, mock_ayudas_ref, test_cases
-from agents.orquestation_agent import OrchestrationAgent
-from agents.test_agent import TestAgent
+from app_chat.tests.mock_data import mock_ayudas, mock_ayudas_ref, test_cases
+from app_chat.agents.orquestation_agent import OrchestrationAgent
+from app_chat.agents.test_agent import TestAgent
 import json
-from logging_setup import redirect_stdout_to_logger
+from app_chat.logging_setup import redirect_stdout_to_logger
+from app_chat.tools.vectorial_tools import save_pdf_at_vec_db
+import json
+import os
+import psycopg2
+import unicodedata
+import sys
+from dotenv import load_dotenv
 
+# --- Función para limpiar cada valor ---
+def safe_encode(value):
+    if isinstance(value, bytes):
+        return value.decode('utf-8', errors='replace')  # Decodifica bytes
+    if isinstance(value, str):
+        # Normaliza unicode y re-encodea
+        value = unicodedata.normalize('NFC', value)
+        return value.encode('utf-8', errors='replace').decode('utf-8')
+    return value  # Si es otro tipo (int, float...), no tocar
+
+# --- Función para validar todos los datos ---
+def validate_data(dataset, dataset_name):
+    print(f"\nValidando datos en {dataset_name}...")
+    for idx, record in enumerate(dataset):
+        for key, value in record.items():
+            try:
+                safe_encode(value)
+            except Exception as e:
+                print(f"[ERROR] Problema en registro {idx}, campo '{key}': {repr(value)} -> {e}")
+                sys.exit(1)  # Salimos si detectamos un error grave
+    print(f"Todos los datos en {dataset_name} son seguros para UTF-8 ✅")
+
+# --- Fixture pytest corregido ---
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
     load_dotenv()
@@ -15,6 +45,10 @@ def setup_database():
     os.environ["ENVIRONMENT"] = "TEST"
     postgres_user = os.environ["POSTGRES_USER"]
     postgres_password = os.environ["POSTGRES_PASSWORD"]
+
+    # --- VALIDAR datasets antes de insertar ---
+    validate_data(mock_ayudas, "mock_ayudas")
+    validate_data(mock_ayudas_ref, "mock_ayudas_ref")
 
     connection = psycopg2.connect(
         dbname="ayudas",
@@ -81,15 +115,19 @@ def setup_database():
     );
     """)
 
-
     connection.commit()
 
+    # Limpieza previa
     cursor.execute("DELETE FROM ayudas_mock;")
     cursor.execute("DELETE FROM ayudas_mock_ref;")
 
+    # Insertar datos
     for ayuda in mock_ayudas:
         columns = ayuda.keys()
-        values = [json.dumps(ayuda[column]) if isinstance(ayuda[column], dict) else ayuda[column] for column in columns]
+        values = [
+            safe_encode(json.dumps(ayuda[column])) if isinstance(ayuda[column], dict) else safe_encode(ayuda[column])
+            for column in columns
+        ]
         insert_statement = f"""
         INSERT INTO ayudas_mock ({", ".join(columns)})
         VALUES ({", ".join(["%s"] * len(values))})
@@ -98,21 +136,21 @@ def setup_database():
 
     for ayuda_ref in mock_ayudas_ref:
         columns = ayuda_ref.keys()
-        values = [json.dumps(ayuda_ref[column]) if isinstance(ayuda_ref[column], dict) else ayuda_ref[column] for column in columns]
+        values = [
+            safe_encode(json.dumps(ayuda_ref[column])) if isinstance(ayuda_ref[column], dict) else safe_encode(ayuda_ref[column])
+            for column in columns
+        ]
         insert_statement = f"""
         INSERT INTO ayudas_mock_ref ({", ".join(columns)})
         VALUES ({", ".join(["%s"] * len(values))})
         """
         cursor.execute(insert_statement, values)
 
-
     connection.commit()
     cursor.close()
     connection.close()
-    
-    from tools.vectorial_tools import save_pdf_at_vec_db
 
-    pdf_path = os.path.join(os.getcwd(), "app_chat/id1.pdf")
+    pdf_path = os.path.join(os.getcwd(), "app_chat/tests/id1.pdf")
     vectorstore_path = os.path.join(os.getcwd(), "db_test")
 
     save_pdf_at_vec_db(
@@ -126,10 +164,10 @@ def setup_database():
 def test_chat_responses(query, similar_expected_response):
     orquestation_agent = OrchestrationAgent()
     
-    with redirect_stdout_to_logger():
-        test_agent = TestAgent()
-        response = orquestation_agent.analyze_prompt(query)
-        result = test_agent.compare(response, similar_expected_response)
+    # with redirect_stdout_to_logger():
+    test_agent = TestAgent()
+    response = orquestation_agent.analyze_prompt(query)
+    result = test_agent.compare(response, similar_expected_response)
 
     print("\n" + "="*50)
     print(f"Running Test for Query: \n'{query}'\n{'='*50}")

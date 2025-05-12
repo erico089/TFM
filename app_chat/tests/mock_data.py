@@ -10,7 +10,7 @@ mock_ayudas = [
         "objetivo": "Apoyar el desarrollo de nuevas tecnologías aplicadas al sector audiovisual y videojuegos, con posibilidad de transferencia a otros sectores.",
         "beneficiarios": "Pequeñas y medianas empresas (PYMES)",
         "area": "I+D",
-        "presupuesto_minimo": "175.000 €",
+        "presupuesto_minimo": "",
         "presupuesto_maximo": "2.000.000 €",
         "duracion_minima": "",
         "duracion_maxima": "Hasta el 31 de diciembre de 2024, entre 2 y 3 años",
@@ -51,21 +51,9 @@ mock_ayudas_ref = [
             { "id": "id1_ficha", "fragment": 2 },
             { "id": "id1_base", "fragment": 9 }
         ]),
-        "beneficiarios_ref": json.dumps([
-            { "id": "id1_ficha", "fragment": 1 },
-            { "id": "id1_base", "fragment": 6 }
-        ]),
         "año_ref": json.dumps([
             { "id": "id1_ficha", "fragment": 3 },
             { "id": "id1_base", "fragment": 8 }
-        ]),
-        "presupuesto_minimo_ref": json.dumps([
-            { "id": "id1_ficha", "fragment": 4 },
-            { "id": "id1_base", "fragment": 7 }
-        ]),
-        "presupuesto_maximo_ref": json.dumps([
-            { "id": "id1_ficha", "fragment": 6 },
-            { "id": "id1_base", "fragment": 5 }
         ]),
         "duracion_minima_ref": json.dumps([
             { "id": "id1_ficha", "fragment": 5 },
@@ -133,5 +121,30 @@ test_cases = [
     (
         "De la convocatoria de Proyectos de I+D: audiovisual y videojuegos, ¿cuales son sus costes_elegibles?",
         "Costes de personal, instrumental, material amortizable, investigación contractual, consultoría exclusiva para el proyecto, gastos generales del proyecto, y auditoría hasta 1.500 € por beneficiario, aun así, mis datos no son del todo fiables en este caso y requieren de una verificación extra"
+    ),
+    # Preguntar por dato que solo esta en el pdf
+    (
+        "De la convocatoria de Proyectos de I+D: audiovisual y videojuegos, cual es el presupuesto minimo?",
+        "175.000 euros por empresa"
+    ),
+    (
+        "Cual es el presupuesto maixmo de la ayuda de Proyectos de I+D: audiovisual y videojuegos",
+        "Son 2.000.000 € pero no estoy muy seguro asi que seria mejor revisarlo"
+    ),
+    (
+        "Quien es el presidente de estados unidos",
+        "No puedo responder a esa pregunta, recuerda que soy un agente que responde a contenido relacionado con convocatorias de subenciones y ayudas."
+    ),
+    (
+        "Que beneficiarios tiene la ayuda de Proyectos de I+D: audiovisual y videojuegos?",
+        "Pequeñas y medianas empresas (PYMES), aunque no lo tengo muy claro, deberias revisarlo manualmente"
+    ),
+    (
+        "Tienes el link de la convocatoria de la ayuda de Proyectos de I+D: audiovisual y videojuegos?",
+        "Si, aqui esta: https://www.cdtifeder.es/convocatorias/audiovisual-videojuegos-2022"
+    ),
+    (
+        "Que me puedes contar sobre la ayuda de CTDI de la salut en entorno laboral",
+        "No tengo información sobre esa ayuda"
     )
 ]

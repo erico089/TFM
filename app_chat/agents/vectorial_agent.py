@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
-from azureOpenAIServerModel import AzureOpenAIServerModel
+from app_chat.azureOpenAIServerModel import AzureOpenAIServerModel
 from smolagents import CodeAgent, tool
-from tools.vectorial_tools import get_context, get_context_by_id, get_context_by_id_and_fragment
+from app_chat.tools.vectorial_tools import get_context, get_context_by_id, get_context_by_id_and_fragment
 
 class VectorialAgent:
     def __init__(self):
