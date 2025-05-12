@@ -164,10 +164,10 @@ def setup_database():
 def test_chat_responses(query, similar_expected_response):
     orquestation_agent = OrchestrationAgent()
     
-    # with redirect_stdout_to_logger():
-    test_agent = TestAgent()
-    response = orquestation_agent.analyze_prompt(query)
-    result = test_agent.compare(response, similar_expected_response)
+    with redirect_stdout_to_logger():
+        test_agent = TestAgent()
+        response = orquestation_agent.analyze_prompt(query)
+        result = test_agent.compare(response, similar_expected_response)
 
     print("\n" + "="*50)
     print(f"Running Test for Query: \n'{query}'\n{'='*50}")
