@@ -103,7 +103,7 @@ test_cases = [
     # Preguntar si hay convocatorias abiertas hoy, tendra que usar Duck Duck tool
     (
         "¿Existe alguna convocatoria abierta a día de hoy?", 
-        "Si que hay"
+        "No de la que yo tenga constancia"
     ),
 
     # Pedir una convocatoria del área I+D

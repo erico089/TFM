@@ -54,6 +54,34 @@ class PostgresAgent:
             options="-c client_encoding=UTF8"
         )
 
+        self.fields = [
+            "minimis",
+            "nombre",
+            "linea",
+            "fecha_inicio",
+            "fecha_fin",
+            "objetivo",
+            "beneficiarios",
+            "area",
+            "presupuesto_minimo",
+            "presupuesto_maximo",
+            "duracion_minima",
+            "duracion_maxima",
+            "intensidad_subvencion",
+            "intensidad_prestamo",
+            "tipo_financiacion",
+            "forma_plazo_cobro",
+            "region_aplicacion",
+            "tipo_consorcio",
+            "costes_elegibles",
+            "link_ficha_tecnica",
+            "link_orden_bases",
+            "link_convocatoria",
+            "id_vectorial",
+            "id",
+            "organismo",
+            "año"
+        ]
 
     def analyze_prompt(self, prompt) -> str:
         task = f"""
@@ -63,7 +91,7 @@ class PostgresAgent:
         - Utilizar las herramientas disponibles para consultar la base de datos y obtener toda la información necesaria.
         - Siempre que uses una herramienta, debes pasarle la conexión: por ejemplo, `run_query(self.connection, "SELECT * FROM {self.table_name}")`.
         - Dispones de las siguientes herramientas:
-            - `run_query`: para ejecutar consultas SQL personalizadas (principalmente sobre la tabla {self.table_name}). Ten en cuenta que todos los campos, a excepción de las referencias, son de tipo `text`. **Importante**: esta tabla contiene los siguientes campos: `{fields}`. 
+            - `run_query`: para ejecutar consultas SQL personalizadas (principalmente sobre la tabla {self.table_name}). Ten en cuenta que todos los campos, a excepción de las referencias, son de tipo `text`. **Importante**: esta tabla contiene los siguientes campos: `{self.fields}`. 
               Cuando realices consultas, utiliza solamente estos campos para construir tus queries.
             - `{self.get_record_by_id_func_name}` y `{self.get_record_by_id_vectorial_func_name}`: para recuperar registros específicos a partir del ID o ID vectorial.
 
