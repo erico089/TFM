@@ -72,13 +72,19 @@ class OrchestrationAgent:
         - Postgres no puede resolver completamente.
         - Postgres devuelve un ID de fichero y necesitas más detalles.
         - Necesitas información adicional o específica que no está en la base de datos estructurada.
-        - Siempre que uses ask_vectorial_agent y dispongas de un ID de fichero, pásalo para enfocar la búsqueda de forma precisa.
+
+        **IMPORTANTE**:
+        - El uso de esta herramienta **requiere obligatoriamente un ID de fichero (vectorial_id)**.
+        - Este ID puede obtenerse de dos formas:
+            - Si el `ask_postgres_agent` devuelve un `vectorial_id` en su respuesta, úsalo directamente.
+            - Si no, intenta guiar al PostgresAgent para que lo proporcione.
+        - **Si no puedes obtener un ID vectorial, no debes llamar a ask_vectorial_agent**, ya que sin ese ID la búsqueda sería ambigua y podría devolver información irrelevante o incorrecta.
 
         4. **DuckDuckGoSearchTool**: Realiza búsquedas generales en Internet. Úsala si:
         - La pregunta es sobre conceptos generales, definiciones o historia de convocatorias.
         - Si el usuario necesita información extra de la convocatoria, pero siempre indicando que lo has buscado en internet.
-        - En ningun caso responderas información que no tenga con el tema de ayudas.
-        - En ningun caso responderas al usuario sobre otras convocatorias que encuentres en internet.
+        - En ningún caso responderás información que no tenga relación con el tema de ayudas.
+        - En ningún caso responderás al usuario sobre otras convocatorias que encuentres en internet.
 
         Normas de actuación:
         - **Prioriza el uso de extract_from_id_if_present si tienes un ID claro** en el contexto o en el prompt.
@@ -91,9 +97,14 @@ class OrchestrationAgent:
 
         - **Nunca inventes datos**. Si no encuentras la información, explica claramente qué herramientas usaste y que no has podido encontrar una respuesta completa.
 
+        - Si Postgres devuelve un dato que ya indica que **podría no ser del todo fiable**, y VectorialAgent **no permite confirmar ni refutar** ese dato, puedes devolverlo indicando claramente que podría no ser 100% exacto.  
+          En ese caso, **si tienes el enlace a la convocatoria (link_convocatoria)**, añádelo también en la respuesta para que el usuario pueda revisarla por su cuenta.
+
         - Tu salida final debe ser un **objeto** que contenga dos partes:
             - **"human_readable_answer"**: una respuesta natural, bien explicada y cercana para el usuario.
             - **"internal_agent_answer"**: una respuesta más técnica que puede incluir IDs, nombres exactos, fechas u otros datos internos que podrían ser necesarios para que otros agentes continúen el proceso más eficientemente.
+
+        {f'- Si estás en entorno TEST, añade también un campo "tools" al objeto final con las herramientas que has usado, por ejemplo: "tools": ["PostgresTool", "DuckDuckGoTool"].' if os.getenv("ENVIRONMENT") == "TEST" else ''}
 
         Contexto de conversación anterior (últimos mensajes relevantes):
         {context}

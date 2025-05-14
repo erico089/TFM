@@ -52,11 +52,12 @@ def get_context(prompt: str) -> list:
 
     db = Chroma(persist_directory=vectorstore_path)
 
-    resultados = db.similarity_search(embedding, k=k)
+    results = db.similarity_search_by_vector(
+        embedding,
+        k=k,
+    )
 
-    contexto = [doc.page_content for doc in resultados]
-
-    return contexto
+    return results
 
 @tool
 def get_context_by_id(prompt: str, doc_id: str) -> list:
@@ -95,7 +96,13 @@ def get_context_by_id(prompt: str, doc_id: str) -> list:
 
     db = Chroma(persist_directory=vectorstore_path)
 
-    return db.similarity_search(embedding, k=k, filter={"id": doc_id})
+    results = db.similarity_search_by_vector(
+        embedding,
+        k=k,
+        filter={"id": doc_id}
+    )
+
+    return results
 
 @tool
 def get_context_by_id_and_fragment(prompt: str, doc_id: str, fragment_id: int) -> list:
@@ -135,16 +142,17 @@ def get_context_by_id_and_fragment(prompt: str, doc_id: str, fragment_id: int) -
 
     db = Chroma(persist_directory=vectorstore_path)
 
-    return db.similarity_search(
-        embedding, 
-        k=k, 
+    results = db.similarity_search_by_vector(
+        embedding,
+        k=k,
         filter={
-        "$and": [
-            {"id": doc_id},
-            {"fragment": fragment_id}
-        ]
+            "$and": [
+                {"id": doc_id},
+                {"fragment": str(fragment_id)}
+            ]
         }
     )
+    return results
 
 def save_pdf_at_vec_db(
     pdf_paths: list,

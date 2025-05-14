@@ -14,6 +14,7 @@ import psycopg2
 import unicodedata
 import sys
 from dotenv import load_dotenv
+import shutil
 
 # --- Función para limpiar cada valor ---
 def safe_encode(value):
@@ -150,11 +151,24 @@ def setup_database():
     cursor.close()
     connection.close()
 
-    pdf_path = os.path.join(os.getcwd(), "app_chat/tests/id1.pdf")
+    pdf_path_1 = os.path.join(os.getcwd(), "app_chat/tests/id1.pdf")
+    pdf_path_2 = os.path.join(os.getcwd(), "app_chat/tests/id2.pdf")
     vectorstore_path = os.path.join(os.getcwd(), "db_test")
 
+    if os.path.exists(vectorstore_path):
+        shutil.rmtree(vectorstore_path)
+
+    os.makedirs(vectorstore_path, exist_ok=True)
+
     save_pdf_at_vec_db(
-        pdf_paths=[pdf_path],
+        pdf_paths=[pdf_path_1],
+        vectorstore_path=vectorstore_path,
+        chunk_size=500,
+        chunk_overlap=100
+    )
+
+    save_pdf_at_vec_db(
+        pdf_paths=[pdf_path_2],
         vectorstore_path=vectorstore_path,
         chunk_size=500,
         chunk_overlap=100
