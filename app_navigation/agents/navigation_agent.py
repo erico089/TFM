@@ -41,6 +41,25 @@ async def save_urls_to_file(urls: list):
 
 output_file = os.path.join(output_dir, "urls_verifyed.txt")
 
+from urllib.parse import urljoin
+
+@registry.action(description="Resuelve un href relativo usando la URL base actual", domains=["*"])
+async def resolve_href_url(base_url: str, href: str) -> str:
+    """
+    Esta función combina la URL base actual con un href (que puede ser relativo o parcial)
+    para obtener la URL final completamente resuelta, tal como lo haría un navegador.
+
+    Por ejemplo:
+    - base_url: "https://www.sodercan.es/ayudas"
+    - href: "/convocatorias/123"
+
+    Resultado: "https://www.sodercan.es/convocatorias/123"
+    """
+    resolved_url = urljoin(base_url, href)
+    print(f"[Resuelto] Base: {base_url} + Href: {href} → {resolved_url}")
+    return resolved_url
+
+
 @registry.action(description="Añadir una URL al archivo de URLs verificadas", domains=["*"])
 async def add_url_to_file(url: str):
     """
@@ -66,24 +85,35 @@ async def navigate_convocatoria(url: str, instructions: str):
 
     Pasos que debes seguir:
 
-    1. Cargar la página web en la URL proporcionada.
-    2. Identificar todos los elementos que correspondan a **convocatorias de ayudas**. 
-    - **Importante:** Solo debes considerar enlaces que realmente lleven a páginas de convocatorias de ayudas. 
-    - No debes recoger enlaces a vverify_convosídeos, noticias, eventos, documentos generales u otras secciones que no sean convocatorias.
-    3. Para cada convocatoria, obtén el **enlace final completo** que aparece en el navegador cuando pasas el ratón sobre el enlace.
-    - No debes recoger simplemente el atributo `href` del HTML.
-    - Recoge la URL tal y como la interpreta el navegador, incluyendo el dominio completo si es necesario (por ejemplo: `https://www.cdti.es//node/115`).
-    4. Cuando encuentres la pagina con las convocatorias y empiezes a extraer URLs, para cuando tengas todas las URLs de esta pagina.
-    5. Si encuentras algún enlace roto, vacío o incorrecto, omítelo.
-    6. Una vez extraídas las URLs válidas, construye una lista de strings con todas ellas.
-    7. Usa la acción **Save URLs to File** para guardar esta lista de URLs extraídas en un fichero.
+    1. Carga la página web en la URL proporcionada.
+    2. Identifica todos los elementos que correspondan a **convocatorias de ayudas**. 
+    - Solo debes considerar enlaces que realmente lleven a páginas de convocatorias.
+    - Ignora enlaces a vídeos, noticias, documentos generales u otras secciones irrelevantes.
+    - Ignora pdfs o documentos, la convocatoria debe ser una url o html.
+    3. Para cada convocatoria, obtén el valor del atributo `href`.
+    4. Luego, obtén la URL actual de la página (`page.url`) y llama a la herramienta **Resolve Href URL** pasándole ambos valores:
+    - `base_url = page.url`
+    - `href = valor del enlace encontrado`
+    - Esta herramienta te devolverá la URL completamente resuelta (tal como se muestra en el navegador).
+    5. No construyas la URL manualmente ni asumas dominios fijos. Usa siempre la herramienta para cada enlace.
+    6. Cuando hayas extraído todas las URLs válidas, crea una lista con ellas.
+    7. Usa la acción **Save URLs to File** para guardar esta lista.
 
-    Además, se te proporcionan las siguientes instrucciones específicas para poder navegar y consultar las ayudas:
+    Además, se te proporcionan las siguientes instrucciones específicas para navegar por esta web en concreto:
 
     {instructions}
 
     URL proporcionada: {url}
-    """
+        """
+
+    agent = Agent(
+        task=task,
+        llm=llm,
+        enable_memory=True,
+        browser=browser,
+        controller=controller,
+    )
+
     agent = Agent(
         task=task,
         llm=llm,

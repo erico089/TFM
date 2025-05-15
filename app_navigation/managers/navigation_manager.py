@@ -46,12 +46,16 @@ class NavigationManager:
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context()
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+                locale="es-ES"
+            )
             page = await context.new_page()
 
             for index, url in enumerate(urls):
                 try:
-                    await page.goto(url, timeout=15000)
+                    await page.goto(url, timeout=15000, wait_until="networkidle")
+                    await asyncio.sleep(2)
                     final_url = page.url
                     refined_urls.append(final_url)
                     print(f"[{index+1}/{len(urls)}] Procesada: {final_url}")
@@ -59,6 +63,7 @@ class NavigationManager:
                     print(f"Error accediendo a {url}: {e}")
 
             await browser.close()
+
 
         base, ext = os.path.splitext(urls_file_path)
         refined_file_path = f"{base}_refined{ext}"

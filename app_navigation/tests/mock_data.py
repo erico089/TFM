@@ -28,3 +28,26 @@ CTDI_URLS = [
 ]
 
 CTDI_URL = "https://www.cdti.es/"
+
+SODERCAN_URLS = [
+    "https://ayudas.sodercan.es/ayudas/1160",
+    "https://ayudas.sodercan.es/ayudas/1167",
+    "https://ayudas.sodercan.es/ayudas/1166",
+    "https://ayudas.sodercan.es/ayudas/1161",
+    "https://ayudas.sodercan.es/ayudas/1153",
+    "https://ayudas.sodercan.es/ayudas/1155",
+    "https://ayudas.sodercan.es/ayudas/1154",
+    "https://ayudas.sodercan.es/ayudas/1158",
+    "https://ayudas.sodercan.es/ayudas/1162"
+]
+
+SODERCAN_URL = "https://www.sodercan.es/"
+
+ANDALUCIA_URLS = [
+    "https://juntadeandalucia.es/servicios/sede/tramites/procedimientos/detalle/25607.html",
+    "https://juntadeandalucia.es/servicios/sede/tramites/procedimientos/detalle/25606.html",
+    "https://juntadeandalucia.es/servicios/sede/tramites/procedimientos/detalle/25569.html",
+    "https://juntadeandalucia.es/servicios/sede/tramites/procedimientos/detalle/25569.html"
+]
+
+ANDALUCIA_URL = "https://www.andaluciatrade.es/"
