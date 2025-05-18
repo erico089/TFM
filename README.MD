@@ -247,7 +247,8 @@ set PYTHONPATH=. && pytest -s app_navigation/tests/
 
 ```bash
 # Para lanzar los tests de la app de crawler
-set PYTHONPATH=. && pytest -s app_crawler/tests/
+set PYTHONPATH=. && pytest -s app_crawler/tests/test_crawler_ctdi.py 
+set PYTHONPATH=. && pytest -s app_crawler/tests/test_crawler_andalucia.py
 ```
 
 ```bash

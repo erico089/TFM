@@ -43,7 +43,7 @@ class CrawlingManager:
         create_json_templates(json_results, self.json_folder_base)
         process_temp_pdfs_batch(self.pdf_folder_base, self.db_vec_temp_dir)
 
-        self.run_refinement_agents(json_results, max_workers=5)
+        self.run_refinement_agents(json_results)
 
         fix_minimis_in_jsons(f"{self.json_folder_base}/refined")
 

@@ -1,15 +1,15 @@
 from app_crawler.managers.crawling_manager import CrawlingManager
 import os
 import pytest
-from app_crawler.tests.mock_data import mock_data
+from app_crawler.tests.mock_data_andalucia import mock_data
 import json
 from app_crawler.agents.test_agent import TestAgent
+import shutil
 
 @pytest.fixture(scope="session")
 def setup_crawling_manager():
-    txt_content = """https://www.cdti.es/ayudas/programa-tecnologico-espacial-pte
-https://www.cdti.es/ayudas/proyectos-de-i-d
-https://www.cdti.es/ayudas/innterconecta-step"""
+    txt_content = """https://juntadeandalucia.es/servicios/sede/tramites/procedimientos/detalle/25569.html
+https://juntadeandalucia.es/servicios/sede/tramites/procedimientos/detalle/25606.html"""
 
     base_path = 'data_crawl_test'
     nav_urls_path = os.path.join(base_path, 'nav_urls')
@@ -29,7 +29,7 @@ https://www.cdti.es/ayudas/innterconecta-step"""
     os.makedirs(db_vec_temp_dir, exist_ok=True)
     os.makedirs(db_vec_dir, exist_ok=True)
 
-    if not os.path.exists(urls_file_path):
+    if os.path.exists(urls_file_path):
         with open(urls_file_path, 'w', encoding='utf-8') as f:
             f.write(txt_content)
 
@@ -42,7 +42,7 @@ https://www.cdti.es/ayudas/innterconecta-step"""
         insert=False
     )
 
-    # manager.run()
+    manager.run()
     return manager
 
 
@@ -54,7 +54,7 @@ def test_pdfs_generated_correctly(setup_crawling_manager):
     for folder in pdf_folders:
         print(f"- {folder}")
     
-    assert len(pdf_folders) == 3, f"Se esperaban 3 carpetas en {pdf_folder_base}, pero hay {len(pdf_folders)}"
+    assert len(pdf_folders) == 2, f"Se esperaban 2 carpetas en {pdf_folder_base}, pero hay {len(pdf_folders)}"
 
     total_pdfs = 0
     for folder in pdf_folders:
@@ -66,7 +66,7 @@ def test_pdfs_generated_correctly(setup_crawling_manager):
 
     print(f"[INFO] Total de PDFs encontrados: {total_pdfs}")
     
-    assert total_pdfs == 5, f"Se esperaban 5 PDFs en total en las carpetas de {pdf_folder_base}, pero hay {total_pdfs}"
+    assert total_pdfs == 4, f"Se esperaban 4 PDFs en total en las carpetas de {pdf_folder_base}, pero hay {total_pdfs}"
 
 
 def test_jsons_reference_and_refined(setup_crawling_manager):
@@ -89,8 +89,8 @@ def test_jsons_reference_and_refined(setup_crawling_manager):
     print(f"- En 'reference': {len(reference_jsons)} archivos")
     print(f"- En 'refined': {len(refined_jsons)} archivos")
 
-    assert len(reference_jsons) == 10, f"[ERROR] Se esperaban 10 archivos JSON en {reference_folder}, pero hay {len(reference_jsons)}"
-    assert len(refined_jsons) == 10, f"[ERROR] Se esperaban 10 archivos JSON en {refined_folder}, pero hay {len(refined_jsons)}"
+    assert len(reference_jsons) == 2, f"[ERROR] Se esperaban 2 archivos JSON en {reference_folder}, pero hay {len(reference_jsons)}"
+    assert len(refined_jsons) == 2, f"[ERROR] Se esperaban 2 archivos JSON en {refined_folder}, pero hay {len(refined_jsons)}"
 
 
 
@@ -128,7 +128,7 @@ def test_json_data_quality_and_extraction(setup_crawling_manager):
 
     print(f"[INFO] Total matches encontrados: {total_matches}")
 
-    assert total_matches == 3, f"[ERROR] Se esperaban 3 matches, pero se encontraron {total_matches}."
+    assert total_matches == 2, f"[ERROR] Se esperaban 2 matches, pero se encontraron {total_matches}."
 
     aciertos = 0
     fallos = 0

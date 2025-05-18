@@ -78,14 +78,14 @@ campos_revisar = [
     {
         "field_name": "Duración mínima",
         "field_ref_name": "Duración mínima_ref",
-        "topic_description": "Duración mínima de los proyectos o actividades financiadas por la convocatoria.",
+        "topic_description": "Duración mínima de los proyectos o actividades financiadas por la convocatoria. . A poder ser, este campo no deberia ser una fecha sino un rango de fechas o una cantidad de tiempo",
         "context_function": get_duracion_minima_context,
         "max_intentos": 1
     },
     {
         "field_name": "Duración máxima",
         "field_ref_name": "Duración máxima_ref",
-        "topic_description": "Duración máxima de los proyectos o actividades financiadas por la convocatoria. Si se indica, la duración maxima puede ser permanente",
+        "topic_description": "Duración máxima de los proyectos o actividades financiadas por la convocatoria. Si se indica, la duración maxima puede ser permanente. A poder ser, este campo no deberia ser una fecha sino un rango de fechas o una cantidad de tiempo",
         "context_function": get_duracion_maxima_context,
         "max_intentos": 1
     },

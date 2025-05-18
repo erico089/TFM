@@ -8,6 +8,7 @@ from pypdf import PdfReader
 from app_crawler.tools.vectorial_db_tools import search_from_context_vec_db
 from urllib.parse import urlparse, urljoin
 from typing import Dict
+import time
 
 @tool
 def leer_json(file_path: str) -> dict:
@@ -107,8 +108,10 @@ def fetch_html_tool(url: str) -> str:
         options.add_argument("--disable-blink-features=AutomationControlled")
 
         driver = webdriver.Chrome(options=options)
-        driver.set_page_load_timeout(15)
+        driver.set_page_load_timeout(20)
         driver.get(url)
+
+        time.sleep(5)
         html = driver.page_source
         driver.quit()
 

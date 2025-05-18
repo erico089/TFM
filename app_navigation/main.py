@@ -2,11 +2,9 @@ import asyncio
 from app_navigation.managers.navigation_manager import NavigationManager
 
 def main():
-    # url = "https://www.cdti.es/"
-    url = "https://www.andaluciatrade.es/"
+    url = "https://www.cdti.es/"
 
-    # instructions_file_path = "app_navigation/instructions/cdti_instructions.txt" 
-    instructions_file_path = "app_navigation/instructions/andalucia_instructions.txt" 
+    instructions_file_path = "app_navigation/instructions/cdti_instructions.txt" 
     urls_file_path = "data/nav_urls/urls.txt"
 
     navigation_manager = NavigationManager()
