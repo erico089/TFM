@@ -1,5 +1,5 @@
 # main.py
-from managers.orquestation_manager import OrchestrationManager
+from app_chat.managers.orquestation_manager import OrchestrationManager
 
 def main():
     manager = OrchestrationManager()
